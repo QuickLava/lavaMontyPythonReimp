@@ -1,0 +1,37 @@
+MontyPython Reimp
+Changelog for FitDaisy.pac
+
+GFX Value Pairs:
+	[000DXXXX, 0177XXXX]
+	[0017XXXX, 0178XXXX]
+	[000EXXXX, 0179XXXX]
+	[0012XXXX, 017AXXXX]
+SFX Value Pairs:
+Trace ID Value Pairs:
+	[00000009, 0000032B]
+	[0000001C, 0000032C]
+
+Note: To get absolute param addresses add 0x80 to recorded offset.
+
+Graphic Effect Param Changes:
+	[0x0000AA20->0x0000A898]: Changed Param from 0x000D0004 to 0x01770004
+	[0x0000EA88->0x00015D30]: Changed Param from 0x000D0001 to 0x01770001
+	[0x000111E0->0x0002334C]: Changed Param from 0x000D0006 to 0x01770006
+	[0x000112A8->0x00010700]: Changed Param from 0x000D0005 to 0x01770005
+Graphic Effect (Attached) Param Changes:
+	[0x0000A2D0->0x0000A200]: Changed Param from 0x000D0007 to 0x01770007
+	[0x0000A8F0->0x0000A818]: Changed Param from 0x000D0002 to 0x01770002
+	[0x0000AC78->0x0000ABA8]: Changed Param from 0x000D0003 to 0x01770003
+	[0x00012A00->0x00010BE0]: Changed Param from 0x000D0006 to 0x01770006
+	[0x00020BF4->0x0002125C]: Changed Param from 0x000D0002 to 0x01770002
+Graphic Effect (Attached)(+100) Param Changes:
+Graphic Effect (Attached 2) Param Changes:
+Graphic Effect (Stepping) Param Changes:
+Graphic Effect (Landing) Param Changes:
+Graphic Effect (Tumbling) Param Changes:
+Graphic Effect (Attached 19) Param Changes:
+Terminate Graphic Effect Param Changes:
+Sword Glow Param Changes:
+Sword/Hammer Glow Param Changes:
+Sword Glow Param Changes:
+Sword/Hammer Glow Param Changes:

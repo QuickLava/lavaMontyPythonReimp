@@ -1,0 +1,17 @@
+
+			<!--Note that (IN REPLACE ACTIONS ONLY), an 'X' in the "value" parameter is treated as a passthrough.-->
+			<!--So, for example, a Replace action with a value of "XXXX1010" will only replace the lower 4 digits, leaving the 'X'ed out digits alone.-->
+Scrapped in favor of lock. If you want this functionality, just set the lock to the bits you want to remain the same.
+
+<!--9: Converts the target value to a different type. Valid "value" arguments are as follows-->
+			<!--	"00000000": Converts to VALUE type (Integer)-->
+			<!--	"00000001": Converts to SCALAR type (Float).-->
+			<!--		IMPORTANT NOTE: Converting from VALUE type to SCALAR will multiply its raw hex by 0xEA60 to maintain its original interpretation.-->
+			<!--		So, for instance, converting a VALUE type with a value of '4' to a SCALAR will produce a SCALAR with a value of '4.0'.-->
+			<!--		This also applies in reverse: a SCALAR of '4.0' will convert to a VALUE of '4'.-->
+			<!--		If you for some reason want to skip this conversion, convert to (4) type (see below), then to your desired type.-->
+			<!--	"00000002": Converts to POINTER type.-->
+			<!--	"00000003": Converts to BOOLEAN type.-->
+			<!--	"00000004": Converts to (4) type.-->
+			<!--	"00000005": Converts to VARIABLE type.-->
+			<!--	"00000006": Converts to REQUIREMENT type.-->

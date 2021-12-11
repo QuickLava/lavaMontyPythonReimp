@@ -1,0 +1,13 @@
+cf48
+
+sword glow length = a0?
+2f520
+
+diff = 0x84 or 132
+0x20D00
+
+Plan:
+Moveset Patches
+- Specify a list of functions to target and which parameter to target
+- a list of modifications to apply to elements which match some pattern
+- for now, just implement replacement

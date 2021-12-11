@@ -1,0 +1,91 @@
+<?xml version="1.0"?> 
+<movesetPatch name = "External GFX File Replacement">
+	<targets>
+		<command name = "Graphic Effect" signature = "0x11001000" paramIndex="0"/>
+		<command name = "Graphic Effect (Attached)" signature = "0x11010A00" paramIndex="0"/>
+		<command name = "Graphic Effect (Attached)(+100)" signature = "0x11010B00" paramIndex="0"/>
+		<command name = "Graphic Effect (Attached 2)" signature = "0x11020A00" paramIndex="0"/>
+		<command name = "Graphic Effect (Stepping)" signature = "0x111A1000" paramIndex="0"/>
+		<command name = "Graphic Effect (Landing)" signature = "0x111B1000" paramIndex="0"/>
+		<command name = "Graphic Effect (Tumbling)" signature = "0x111C1000" paramIndex="0"/>
+		<command name = "Graphic Effect (Attached 19)" signature = "0x11190A00" paramIndex="0"/>
+		<command name = "Terminate Graphic Effect" signature = "0x11150300" paramIndex="0"/>
+		<command name = "Sword Glow" signature = "11031400" paramIndex = "0xB"/>
+		<command name = "Sword/Hammer Glow" signature = "11041700" paramIndex = "11"/>
+	</targets>
+	<!--The list of modifications to check through while applying this patch.-->
+	<modifications>
+		<!--Mod: An individual modification. When a mod is triggered, all of its "actions" will be executed on the target parameter, in order from top to bottom.-->
+		<!--Match: The parameter value that needs to be found in order to trigger this modification.-->
+		<!--Notably, an 'X' is treated as a wildcard, and will match anything in that slot.-->
+		<!--ExtraCondition: Specifies an extra condition which must be met in order for the mod to be applied.-->
+		<!--  0: Does nothing. This is the value used when no value is provided, though it may also be used to explicitly disable this feature.-->
+		<!--  1: Requires that the mod immediately preceding this one was triggered.-->
+		<!--  2: Requires that the mod immediately preceding this one was NOT triggered.-->
+		<!--Lock: This acts as a mask, preventing changes to the original values of digits in any slot marked with a 1.-->
+		<!--So, for instance, a lock mask of "11110000" will lock a value's top 4 digits, ensuring that they are unchanged by any actions in this modification. -->
+		<!--In the event that either parameter (match or lock) is not a full 8 characters long, it's front will be padded with zeroes (eg. "101" will become "00000101").-->
+		<!--ParamIndexRedirect: This can be used to cause actions to be instead taken on some other parameter of this function, rather than on the one which triggered the match.-->
+		<!--If a value is not explicitly provided this feature is disabled, though it may also be explicitly disabled by providing an index below 0.-->
+		<mod match = "000DXXXX" extraCondition = "" lock = "00000000" paramIndexRedirect = "-1">
+			<!--Type: Defines the action to be taken.-->
+			<!--  0: Does nothing. Useful if you just want the program to print matches to the console without modifying them.-->
+			<!--  1: Replaces the found value with the provided one.-->
+			<!--  2: Adds the provided value to the target one.-->
+			<!--  3: Subtracts the provided value *from* the target one.-->
+			<!--  4: Multiplies the target value into the provided one.-->
+			<!--  5: Divides the target value by the provided one.-->
+			<!--  6: Bitwise ANDs the provided value into the target value.-->
+			<!--  7: Bitwise ORs the provided value into the target value.-->
+			<!--  8: Bitwise XORs the provided value into the target value.-->
+			<!--  9: Change the targeted parameter index to the provided value.-->
+			<!--Value:-->
+			<!--The value to be used in the corresponding action.-->
+			<action type = "1" value = "01770000"/>
+		</mod>
+		<mod match = "0017XXXX" lock = "00001111">
+			<action type = "1" value = "01780000"/>
+			<action type = "9" value = "00000001"/>
+			<action type = "1" value = "01780000"/>
+		</mod>
+		<mod match = "000EXXXX" lock = "00001111">
+			<action type = "1" value = "01790000"/>
+		</mod>
+		<mod match = "0012XXXX" lock = "00001111">
+			<action type = "1" value = "017A0000"/>
+		</mod>
+	</modifications>
+</movesetPatch>
+
+<movesetPatch name = "Float Param Test">
+	<targets>
+		<command name = "Graphic Effect" signature = "0x11001000" paramIndex="8"/>
+		<command name = "Graphic Effect (Attached)" signature = "0x11010A00" paramIndex="8"/>
+	</targets>
+	<modifications>
+		<mod match = "XXXXXXXX">
+			<action type = "2" value = "0000EC60"/>
+			<action type = "3" value = "0000AA00"/>
+			<action type = "4" value = "0001D4C0"/>
+			<action type = "5" value = "0001D4C0"/>
+		</mod>
+	</modifications>
+</movesetPatch>
+
+<movesetPatch name = "SFX ID Replacement">
+	<targets>
+		<command name = "Sound Effect" signature = "0x0A000100" paramIndex="0"/>
+		<command name = "Sound Effect 2" signature = "0x0A010100" paramIndex="0"/>
+		<command name = "Sound Effect (Transient)" signature = "0x0A020100" paramIndex="0"/>
+		<command name = "Stop Sound Effect" signature = "0x0A030100" paamIndex="0"/>
+		<command name = "Victory" signature = "0x0A050100" paramIndex="0"/>
+		<command name = "Other Sound Effect (landing)" signature = "0x0A090100" paramIndex="0"/>
+		<command name = "Other Sound Effect (impact)" signature = "0x0A0A0100" paramIndex="0"/>
+		<command name = "Stepping Sound Effect" signature = "0x0A010100" paramIndex="0"/>
+	</targets>
+	<modifications>
+	</modifications>
+</movesetPatch>
+
+
+

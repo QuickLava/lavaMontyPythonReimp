@@ -1,0 +1,4 @@
+﻿  lavaMontyPythonReimp.cpp
+C:\Users\MissionWhitaker\Documents\Visual Studio 2019\Projects\lavaMontyPythonReimp\lavaMontyPythonReimp\lavaMontyPythonReimp.cpp(97,21): warning C4018: '<': signed/unsigned mismatch
+C:\Users\MissionWhitaker\Documents\Visual Studio 2019\Projects\lavaMontyPythonReimp\lavaMontyPythonReimp\lavaMontyPythonReimp.cpp(333,25): warning C4244: 'initializing': conversion from 'std::streamoff' to 'size_t', possible loss of data
+  lavaMontyPythonReimp.vcxproj -> C:\Users\MissionWhitaker\Documents\Visual Studio 2019\Projects\lavaMontyPythonReimp\Debug\lavaMontyPythonReimp.exe

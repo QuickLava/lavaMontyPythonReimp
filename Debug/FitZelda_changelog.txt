@@ -1,0 +1,126 @@
+MontyPython Reimp
+Changelog for FitZelda.pac
+
+GFX Value Pairs:
+	[000DXXXX, 0177XXXX]
+	[0017XXXX, 0178XXXX]
+	[000EXXXX, 0179XXXX]
+	[0012XXXX, 017AXXXX]
+SFX Value Pairs:
+Trace ID Value Pairs:
+	[00000009, 0000032B]
+	[0000001C, 0000032C]
+
+Note: To get absolute param addresses add 0x80 to recorded offset.
+
+Graphic Effect Param Changes:
+	[0x00007E50->0x0002B6B4]: Changed Param from 0x000E0017 to 0x01790017
+	[0x00007FE0->0x0002C09C]: Changed Param from 0x000E0005 to 0x01790005
+	[0x0000AA20->0x0000A918]: Changed Param from 0x000E0004 to 0x01790004
+	[0x0000AAC0->0x0000A9B8]: Changed Param from 0x000E0004 to 0x01790004
+	[0x0000AB78->0x0000AA60]: Changed Param from 0x000E000A to 0x0179000A
+	[0x0000AC40->0x0000AB28]: Changed Param from 0x000E000A to 0x0179000A
+	[0x0000AED8->0x0000AD38]: Changed Param from 0x000E0001 to 0x01790001
+	[0x0000AEF0->0x0000ADC8]: Changed Param from 0x000E000A to 0x0179000A
+	[0x0000B880->0x0001F930]: Changed Param from 0x000E000A to 0x0179000A
+	[0x0000C2E0->0x00022840]: Changed Param from 0x000E000C to 0x0179000C
+	[0x00010F08->0x0002A974]: Changed Param from 0x000E0002 to 0x01790002
+	[0x0001E728->0x00025D48]: Changed Param from 0x000E0002 to 0x01790002
+	[0x0001E768->0x00025A20]: Changed Param from 0x000E0014 to 0x01790014
+	[0x0001E770->0x0000ABF0]: Changed Param from 0x000E0012 to 0x01790012
+	[0x0001E780->0x0001E718]: Changed Param from 0x000E0014 to 0x01790014
+	[0x0001E788->0x0000AC80]: Changed Param from 0x000E0012 to 0x01790012
+	[0x0001FA68->0x0002AE04]: Changed Param from 0x000E0017 to 0x01790017
+	[0x000200D8->0x0001FF48]: Changed Param from 0x000E0002 to 0x01790002
+	[0x00020480->0x0000BBF8]: Changed Param from 0x000E0014 to 0x01790014
+	[0x00023FC8->0x00026390]: Changed Param from 0x000E0017 to 0x01790017
+	[0x00023FD0->0x0002AED4]: Changed Param from 0x000E0017 to 0x01790017
+	[0x00025648->0x000255E0]: Changed Param from 0x000E0002 to 0x01790002
+	[0x00026678->0x0002C8C4]: Changed Param from 0x000E001B to 0x0179001B
+	[0x00026E60->0x0002BCEC]: Changed Param from 0x000E000A to 0x0179000A
+	[0x00028D7C->0x00029D5C]: Changed Param from 0x000E0002 to 0x01790002
+	[0x00028D84->0x00006668]: Changed Param from 0x000E0017 to 0x01790017
+	[0x00028DB4->0x000253B8]: Changed Param from 0x000E0017 to 0x01790017
+	[0x00029CBC->0x0002B874]: Changed Param from 0x000E0002 to 0x01790002
+	[0x00029D44->0x00025EA8]: Changed Param from 0x000E0017 to 0x01790017
+	[0x0002C624->0x00024C68]: Changed Param from 0x000E0002 to 0x01790002
+	[0x0002C65C->0x0002B9EC]: Changed Param from 0x000E0007 to 0x01790007
+Graphic Effect (Attached) Param Changes:
+	[0x00006A88->0x00029DDC]: Changed Param from 0x000E0004 to 0x01790004
+	[0x000076B0->0x0001F4B8]: Changed Param from 0x000E0006 to 0x01790006
+	[0x00007B78->0x0002BD6C]: Changed Param from 0x000E0002 to 0x01790002
+	[0x00007B80->0x0002BDBC]: Changed Param from 0x000E0005 to 0x01790005
+	[0x00007CF0->0x0002B734]: Changed Param from 0x000E0002 to 0x01790002
+	[0x00007FB0->0x0002B7D4]: Changed Param from 0x000E0009 to 0x01790009
+	[0x00007FB8->0x0002B824]: Changed Param from 0x000E0009 to 0x01790009
+	[0x000090C0->0x00008F30]: Changed Param from 0x000E0001 to 0x01790001
+	[0x0000AF90->0x0000AEB0]: Changed Param from 0x000E0008 to 0x01790008
+	[0x0000AFA0->0x0002B444]: Changed Param from 0x000E000D to 0x0179000D
+	[0x0000AFA8->0x0002B494]: Changed Param from 0x000E000D to 0x0179000D
+	[0x0000B5F8->0x00025238]: Changed Param from 0x000E0008 to 0x01790008
+	[0x0000B608->0x0002B4E4]: Changed Param from 0x000E000D to 0x0179000D
+	[0x0000B610->0x00025288]: Changed Param from 0x000E000D to 0x0179000D
+	[0x0000B860->0x00029044]: Changed Param from 0x000E001A to 0x0179001A
+	[0x0000BA48->0x0002B0A4]: Changed Param from 0x000E001C to 0x0179001C
+	[0x0000D3F0->0x00026320]: Changed Param from 0x000E0004 to 0x01790004
+	[0x00011890->0x0002C9C4]: Changed Param from 0x000E0017 to 0x01790017
+	[0x000118B0->0x0002CA14]: Changed Param from 0x000E0017 to 0x01790017
+	[0x0001EBA0->0x0001ECE0]: Changed Param from 0x000E001C to 0x0179001C
+	[0x0001EDD8->0x000236B0]: Changed Param from 0x000E0004 to 0x01790004
+	[0x0001EDE0->0x00020828]: Changed Param from 0x000E0004 to 0x01790004
+	[0x0001EEB8->0x0001F128]: Changed Param from 0x000E0007 to 0x01790007
+	[0x0001FA48->0x00023B48]: Changed Param from 0x000E0002 to 0x01790002
+	[0x0001FA58->0x00023AF8]: Changed Param from 0x000E0017 to 0x01790017
+	[0x000200E8->0x0001FFC8]: Changed Param from 0x000E0017 to 0x01790017
+	[0x00020408->0x0000BA80]: Changed Param from 0x000E000D to 0x0179000D
+	[0x00020410->0x0000BAD0]: Changed Param from 0x000E000D to 0x0179000D
+	[0x00020440->0x000200A0]: Changed Param from 0x000E000D to 0x0179000D
+	[0x00020448->0x00020150]: Changed Param from 0x000E000D to 0x0179000D
+	[0x00020460->0x000200F0]: Changed Param from 0x000E000D to 0x0179000D
+	[0x00020468->0x000201A0]: Changed Param from 0x000E000D to 0x0179000D
+	[0x00021578->0x00006838]: Changed Param from 0x000E0002 to 0x01790002
+	[0x00021630->0x00027858]: Changed Param from 0x000E0001 to 0x01790001
+	[0x00021F00->0x0002ACE4]: Changed Param from 0x000E0004 to 0x01790004
+	[0x00021F08->0x0002AD34]: Changed Param from 0x000E0002 to 0x01790002
+	[0x00022B98->0x00022B40]: Changed Param from 0x000E0004 to 0x01790004
+	[0x00022BA0->0x0002A4BC]: Changed Param from 0x000E0002 to 0x01790002
+	[0x00022BB0->0x00021058]: Changed Param from 0x000E0002 to 0x01790002
+	[0x00022DF0->0x00022DA8]: Changed Param from 0x000E0017 to 0x01790017
+	[0x00022E00->0x00026D88]: Changed Param from 0x000E0004 to 0x01790004
+	[0x00022E08->0x0002BC4C]: Changed Param from 0x000E0004 to 0x01790004
+	[0x000237A8->0x00023810]: Changed Param from 0x000E0009 to 0x01790009
+	[0x00023D70->0x00023DC8]: Changed Param from 0x000E0002 to 0x01790002
+	[0x00023D88->0x00023D28]: Changed Param from 0x000E0017 to 0x01790017
+	[0x00023D90->0x0002AE84]: Changed Param from 0x000E0017 to 0x01790017
+	[0x00023FA8->0x00023FC8]: Changed Param from 0x000E0002 to 0x01790002
+	[0x00025C30->0x0001FCD8]: Changed Param from 0x000E0001 to 0x01790001
+	[0x00025C38->0x0001FD28]: Changed Param from 0x000E0001 to 0x01790001
+	[0x00025C40->0x0001FD78]: Changed Param from 0x000E0001 to 0x01790001
+	[0x00025C48->0x0001FDC8]: Changed Param from 0x000E0001 to 0x01790001
+	[0x00025C50->0x0001FE18]: Changed Param from 0x000E0001 to 0x01790001
+	[0x00026A00->0x00020D08]: Changed Param from 0x000E0004 to 0x01790004
+	[0x00027938->0x0002B1E4]: Changed Param from 0x000E0002 to 0x01790002
+	[0x00027DD0->0x00027388]: Changed Param from 0x000E000B to 0x0179000B
+	[0x00029C74->0x000241D8]: Changed Param from 0x000E0004 to 0x01790004
+	[0x00029C7C->0x00025AE0]: Changed Param from 0x000E0004 to 0x01790004
+	[0x00029C8C->0x00026280]: Changed Param from 0x000E0004 to 0x01790004
+	[0x00029C94->0x000262D0]: Changed Param from 0x000E0004 to 0x01790004
+	[0x00029EB4->0x0002B144]: Changed Param from 0x000E0001 to 0x01790001
+	[0x00029EC4->0x0002B194]: Changed Param from 0x000E001B to 0x0179001B
+	[0x0002BD1C->0x00028704]: Changed Param from 0x000E0004 to 0x01790004
+	[0x0002BD24->0x0002B054]: Changed Param from 0x000E0004 to 0x01790004
+	[0x0002BF5C->0x000208B8]: Changed Param from 0x000E001C to 0x0179001C
+	[0x0002C714->0x0001F618]: Changed Param from 0x000E0006 to 0x01790006
+Graphic Effect (Attached)(+100) Param Changes:
+Graphic Effect (Attached 2) Param Changes:
+Graphic Effect (Stepping) Param Changes:
+Graphic Effect (Landing) Param Changes:
+Graphic Effect (Tumbling) Param Changes:
+Graphic Effect (Attached 19) Param Changes:
+Terminate Graphic Effect Param Changes:
+	[0x00007FF0->0x00026878]: Changed Param from 0x000E0009 to 0x01790009
+	[0x00025FA8->0x0002A26C]: Changed Param from 0x000E0006 to 0x01790006
+Sword Glow Param Changes:
+Sword/Hammer Glow Param Changes:
+Sword Glow Param Changes:
+Sword/Hammer Glow Param Changes:
