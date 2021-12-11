@@ -735,6 +735,31 @@ namespace lava
 					{
 						// Record pointer to current modification
 						currMod = &patchIn.modifications[modItr];
+
+						// Handle redirect
+						if (currMod->redirect != INT_MAX)
+						{
+							setTargetParam(currMod->redirect);
+							/*targetParamIndexOffset = ((8 * currMod->redirect) + 4);
+							paramVal = contents.getBytes(4, paramOffsetNum + targetParamIndexOffset, numGotten);
+							paramValString = numToHexStringWithPadding(hexVecToNum(paramVal), 8);
+							paramValNum = hexStringToNum(paramValString);
+
+							paramTypeIdentifier = contents.getBytes(4, paramOffsetNum + targetParamIndexOffset - 4, numGotten);
+							paramTypeIDNum = lava::hexVecToNum(paramTypeIdentifier);*/
+							logOut << "\t\tParameter Redirect Triggered: New target is Param Index " << currMod->redirect << "\n";
+							logOut << "\t\tParam Val: " << paramValString;
+							std::cout << "\t\tParameter Redirect Triggered: New target is Param Index " << currMod->redirect << "\n";
+							std::cout << "\t\tParam Val: " << paramValString;
+							if (paramTypeIDNum == lava::movesetVarTypes::varTy_SCLR)
+							{
+								logOut << " (Scalar = " << paramValNum / lava::floatDenominator << ")";
+								std::cout << " (Scalar = " << paramValNum / lava::floatDenominator << ")";
+							}
+							logOut << " (Redirected)\n";
+							std::cout << " (Redirected)\n";
+						}
+
 						// If the current mod's match value matches the paramValue string
 						if (hexStrComp(currMod->match, paramValString))
 						{
@@ -746,31 +771,6 @@ namespace lava
 							logOut << "\t\tModification #" << modItr << ":\n";
 							std::cout << "\n\t\tFOUND MATCH!\n";
 							std::cout << "\t\tModification #" << modItr << ":\n";
-
-							// Handle redirect
-							if (currMod->redirect != INT_MAX)
-							{
-								targetParamIndexOffset = ((8 * currMod->redirect) + 4);
-								paramVal = contents.getBytes(4, paramOffsetNum + targetParamIndexOffset, numGotten);
-								paramValString = numToHexStringWithPadding(hexVecToNum(paramVal), 8);
-								paramValNum = hexStringToNum(paramValString);
-
-								paramTypeIdentifier = contents.getBytes(4, paramOffsetNum + targetParamIndexOffset - 4, numGotten);
-								paramTypeIDNum = lava::hexVecToNum(paramTypeIdentifier);
-
-								logOut << "\t\tParameter Redirect Triggered: New target is Param Index " << currMod->redirect << "\n";
-								logOut << "\t\tParam Val: " << paramValString;
-								std::cout << "\t\tParameter Redirect Triggered: New target is Param Index " << currMod->redirect << "\n";
-								std::cout << "\t\tParam Val: " << paramValString;
-								if (paramTypeIDNum == lava::movesetVarTypes::varTy_SCLR)
-								{
-									logOut << " (Scalar = " << paramValNum / lava::floatDenominator << ")";
-									std::cout << " (Scalar = " << paramValNum / lava::floatDenominator << ")";
-								}
-								logOut << " (Redirected)\n";
-								std::cout << " (Redirected)\n";
-
-							}
 
 							// Initialize variables for use in loop
 							const movesetPatchModAction* currAction = nullptr;
@@ -921,12 +921,9 @@ namespace lava
 									{
 										logOut << " Value = " << currAction->value;
 										std::cout << " Value = " << currAction->value;
-										if (currAction->actionType > lava::modActionTypes::actTy_REPLACE)
-										{
-											float incomingFlt = hexStringToNum(currAction->value) / lava::floatDenominator;
-											logOut << " (Scalar = " << incomingFlt << ")";
-											std::cout << " (Scalar = " << incomingFlt << ")";
-										}
+										float incomingFlt = hexStringToNum(currAction->value) / lava::floatDenominator;
+										logOut << " (Scalar = " << incomingFlt << ")";
+										std::cout << " (Scalar = " << incomingFlt << ")";
 										float intermediateFlt = lava::hexStringToNum(intermediateParamValString) / lava::floatDenominator;
 										logOut << "\n\t\t\t\t" << intermediateParamValString << " (" << intermediateFlt << ") -> " << paramValString << " (" << paramValNum / lava::floatDenominator << ")\n";
 										std::cout << "\n\t\t\t\t" << intermediateParamValString << " (" << intermediateFlt << ") -> " << paramValString << " (" << paramValNum / lava::floatDenominator << ")\n";

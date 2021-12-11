@@ -1,5 +1,0 @@
-Commands
-"Sword Glow", 0x11031400
-"Sword/Hammer Glow", 0x11041700
-ParamID
-
