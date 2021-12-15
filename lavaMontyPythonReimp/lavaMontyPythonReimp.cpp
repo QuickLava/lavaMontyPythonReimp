@@ -2,8 +2,6 @@
 
 namespace lava
 {
-	const std::vector<char> boundaryTag = { 0x41, 0x52, 0x43 };
-
 	std::string stringToUpper(const std::string& stringIn)
 	{
 		std::string result = stringIn;
@@ -41,8 +39,6 @@ namespace lava
 		}
 		return result;
 	}
-
-
 
 	std::size_t hexVecToNum(const std::vector<char>& vecIn)
 	{
@@ -224,6 +220,14 @@ namespace lava
 										}
 									}
 								}
+								else if (targetAttr.name() == "paramType")
+								{
+									currTarget.paramIndex = targetAttr.as_int(INT_MAX);
+									if (currTarget.paramIndex < 0)
+									{
+										currTarget.paramIndex = INT_MAX;
+									}
+								}
 							}
 							if (currTarget.paramIndex != INT_MAX)
 							{
@@ -246,6 +250,40 @@ namespace lava
 								{
 									currMod.match = lava::sanitizeHexStrInput(patchModAttr.as_string(), 1);
 								}
+								else if (patchModAttr.name() == "extraCondition")
+								{
+									std::string manipStr = patchModAttr.as_string();
+									if (manipStr.find("0x") == 0)
+									{
+										manipStr = manipStr.substr(2, std::string::npos);
+										currMod.extraCondition = std::stoi(manipStr, nullptr, 16);
+									}
+									else
+									{
+										currMod.extraCondition = patchModAttr.as_int(INT_MAX);
+										if (currMod.extraCondition < 0)
+										{
+											currMod.extraCondition = lava::extraConditionTypes::exCon_NULL;
+										}
+									}
+								}
+								else if (patchModAttr.name() == "evalMethod")
+								{
+									std::string manipStr = patchModAttr.as_string();
+									if (manipStr.find("0x") == 0)
+									{
+										manipStr = manipStr.substr(2, std::string::npos);
+										currMod.matchMethod = std::stoi(manipStr, nullptr, 16);
+									}
+									else
+									{
+										currMod.matchMethod = patchModAttr.as_int(INT_MAX);
+										if (currMod.matchMethod < 0)
+										{
+											currMod.matchMethod = lava::matchEvaluationMethod::mtEvl_EQUALS;
+										}
+									}
+								}
 								else if (patchModAttr.name() == "lock")
 								{
 									currMod.locked = lava::sanitizeHexStrInput(patchModAttr.as_string(), 0);
@@ -256,14 +294,14 @@ namespace lava
 									if (manipStr.find("0x") == 0)
 									{
 										manipStr = manipStr.substr(2, std::string::npos);
-										currMod.redirect = std::stoi(manipStr, nullptr, 16);
+										currMod.paramIndexRedirect = std::stoi(manipStr, nullptr, 16);
 									}
 									else
 									{
-										currMod.redirect = patchModAttr.as_int(INT_MAX);
-										if (currMod.redirect < 0)
+										currMod.paramIndexRedirect = patchModAttr.as_int(INT_MAX);
+										if (currMod.paramIndexRedirect < 0)
 										{
-											currMod.redirect = INT_MAX;
+											currMod.paramIndexRedirect = INT_MAX;
 										}
 									}
 								}
@@ -275,7 +313,20 @@ namespace lava
 								{
 									if (actionAttr.name() == "type")
 									{
-										currAction.actionType = actionAttr.as_int();
+										std::string manipStr = actionAttr.as_string();
+										if (manipStr.find("0x") == 0)
+										{
+											manipStr = manipStr.substr(2, std::string::npos);
+											currAction.actionType = std::stoi(manipStr, nullptr, 16);
+										}
+										else
+										{
+											currAction.actionType = actionAttr.as_int(INT_MAX);
+											if (currAction.actionType < 0)
+											{
+												currAction.actionType = INT_MAX;
+											}
+										}
 									}
 									else if (actionAttr.name() == "value")
 									{
@@ -297,34 +348,6 @@ namespace lava
 		}
 		return result;
 	}
-
-
-
-	/*movesetPatch lava::createMovesetPatch(std::ifstream& fileIn)
-	{
-		movesetPatch result;
-		if (fileIn.is_open())
-		{
-			std::string currentLine = "";
-			char token = 0;
-			while (std::getline(fileIn, currentLine))
-			{
-				if ()
-			}
-		}
-		return result;
-	}*/
-
-
-
-	/*std::vector<char> stringToVec(const std::string& stringIn)
-	{
-		return(std::vector<char>(stringIn.begin(), stringIn.end()));
-	}
-	std::string vecToString(const std::vector<char>& vecIn)
-	{
-		return(std::string(vecIn.begin(), vecIn.end()));
-	}*/
 
 	void byteArray::populate(std::istream& sourceStream)
 	{
@@ -352,7 +375,7 @@ namespace lava
 		}
 		else
 		{
-			std::cerr << "Requested region startpoint was invalid. Specified index was [" << startIndex << "], max valid index is [" << size - 1 << "].\n";
+			std::cerr << "\nRequested region startpoint was invalid. Specified index was [" << startIndex << "], max valid index is [" << size - 1 << "].\n";
 		}
 		return std::vector<char>();
 	}
@@ -361,9 +384,9 @@ namespace lava
 		bool result = 0;
 		if ((atIndex + bytesIn.size()) > atIndex && atIndex + bytesIn.size() < size)
 		{
-			int tempInt = 0;
+			/*int tempInt = 0;
 			char* tempPtr = body.data() + atIndex;
-			/*std::cout << std::hex;
+			std::cout << "Original Value: " << std::hex;
 			for (int i = 0; i < bytesIn.size(); i++)
 			{
 				tempInt = *(tempPtr + i);
@@ -372,7 +395,9 @@ namespace lava
 			}
 			std::cout << "\n" << std::dec;*/
 			std::memcpy(body.data() + atIndex, bytesIn.data(), bytesIn.size());
-			/*std::cout << std::hex;
+			/*tempInt = 0;
+			tempPtr = body.data() + atIndex;
+			std::cout << "Modified Value: " << std::hex;
 			for (int i = 0; i < bytesIn.size(); i++)
 			{
 				tempInt = *(tempPtr + i);
@@ -439,7 +464,6 @@ namespace lava
 		return result;
 	}
 
-
 	bool movesetFile::init(std::string filePathIn)
 	{
 		std::ifstream input;
@@ -484,12 +508,6 @@ namespace lava
 					logOut << "\tExternal Data Table Section[0x" << externalDataOffset << "]: Entry Count = 0x" << externalDataCount << "\n";
 					logOut << "\tTables End[0x" << tablesEnd << "]";
 					logOut << "\n\n" << std::dec;
-					
-					//logOut << "\tData Table Contents:\n";
-					//summarizeTable(dataTableOffset, dataTableCount, 0x80, "\t\t", logOut);
-					//logOut << "\tExternal Data Table Contents:\n";
-					//summarizeTable(externalDataOffset, externalDataCount, 0x0, "\t\t", logOut);
-					//logOut << "\n";
 				}
 			}
 		}
@@ -520,6 +538,50 @@ namespace lava
 				output << prefix << temp << std::string(64 - temp.size(), ' ') << "0x" << lava::hexVecToNum(contents.getBytes(4, cursorAddr, numGotten)) + offsetShiftSize << "\n";
 			}
 			output << std::dec;
+		}
+	}
+	void movesetFile::summarizeOffsetSection(std::ostream& output, std::size_t adjustment)
+	{
+		std::size_t numGotten = 0;
+		std::size_t maxOffset = offsetSectionOffset + offsetSectionCount * 4;
+		std::vector<char> offset = { 0, 0, 0, 0 };
+		std::map<std::size_t, std::vector<char>> contentsPartitioned;
+		std::ofstream trace(filePath.substr(0, filePath.rfind('.')) + "_offset.txt");
+		for (std::size_t cursor = offsetSectionOffset; cursor < maxOffset; cursor += 4)
+		{
+			offset = contents.getBytes(4, cursor, numGotten);
+			if (numGotten == 4)
+			{
+				contentsPartitioned.insert(std::make_pair<std::size_t, std::vector<char>>(lava::hexVecToNum(offset) + adjustment, {}));
+				trace << std::hex << lava::hexVecToNum(offset) + adjustment << std::dec << "\n";
+			}
+		}
+		std::map<std::size_t, std::vector<char>>::iterator endItr = contentsPartitioned.end();
+		std::map<std::size_t, std::vector<char>>::iterator prevItr = contentsPartitioned.begin();
+		std::map<std::size_t, std::vector<char>>::iterator itr = prevItr;
+		itr++;
+		for (itr; itr != endItr; itr++)
+		{
+			prevItr->second = contents.getBytes(itr->first - prevItr->first, prevItr->first, numGotten);
+			if (numGotten != (itr->first - prevItr->first))
+			{
+				std::cerr << "INVALID READ\n";
+			}
+			prevItr++;
+		}
+		endItr = contentsPartitioned.end();
+		prevItr = contentsPartitioned.begin();
+		itr = prevItr;
+		itr++;
+		std::size_t index = 0;
+		for (itr; itr != endItr; itr++)
+		{
+			output << index << "-" << std::hex << prevItr->first - adjustment << std::dec << "-" << itr->first - prevItr->first;
+			output << std::string((16 - (output.tellp() % 16)), '-');
+			output.write((char*)prevItr->second.data(), prevItr->second.size() * sizeof(char));
+			output << std::string((16 - (output.tellp() % 16)), '-');
+			index++;
+			prevItr++;
 		}
 	}
 
@@ -643,26 +705,21 @@ namespace lava
 		std::size_t numGotten = 0;
 		std::vector<std::size_t> searchPings = {};
 
-		std::vector<char> paramOffset;
-		paramOffset.resize(4, 0);
-		std::vector<char> paramTypeIdentifier;
-		paramTypeIdentifier.resize(4, 0);
-		std::size_t paramTypeIDNum = 0;
-		std::vector<char> paramVal;
-		paramVal.resize(4, 0);
-		std::string paramValString;
-		paramValString.resize(8, 0);
-		unsigned int paramValNum = 0;
-		
-
 		// Loop through every target
 		for (std::size_t targetItr = 0; targetItr < targetCount; targetItr++)
 		{
 			// Grab pointer to current target, and ping for its signature within the data section
 			const movesetPatchTarget* currTarget = &patchIn.targets[targetItr];
-			std::cout << "\"" << currTarget->name << "\" [0x" << currTarget->signature << "] (Param " << currTarget->paramIndex << "):\n";
-			logOut << "\"" << currTarget->name << "\" [0x" << currTarget->signature << "] (Param " << currTarget->paramIndex << "):\n";
-
+			std::cout << "\"" << currTarget->name << "\" [0x" << currTarget->signature << "] (Param " << currTarget->paramIndex;
+			logOut << "\"" << currTarget->name << "\" [0x" << currTarget->signature << "] (Param " << currTarget->paramIndex;
+			if (currTarget->paramType != INT_MAX)
+			{
+				std::cout << ", of Type " << currTarget->paramType;
+				logOut << ", of Type " << currTarget->paramType;
+			}
+			std::cout << "):\n";
+			logOut << "):\n";
+			
 			searchPings = contents.searchMultiple(currTarget->signature, dataOffset, dataOffset + dataLength);
 
 			// Loop through every received ping
@@ -675,309 +732,656 @@ namespace lava
 				{
 					// Convert that offset to a size_t, and apply dataOffset (makes offset relative to beginning of .PAC file instead of beginning of moveset section
 					std::size_t paramOffsetNum = lava::hexVecToNum(paramOffset) + dataOffset;
-					// Report location of current ping, as well as its paramOffset. Note, the first paramOffset we report is non .pac adjusted since that's the one you'll see in PSAC, which is what I expect most people will be looking for. The adjusted value is provided second.
-					logOut << "\t[0x" << numToHexStringWithPadding(currPing, 8) << "]: Params @ 0x" << numToHexStringWithPadding(paramOffsetNum - dataOffset, 8) << " (0x" << numToHexStringWithPadding(paramOffsetNum, 0) << " for .pac relative offset)" << "\n";
-					std::cout << "\t[0x" << numToHexStringWithPadding(currPing, 8) << "]: Params @ 0x" << numToHexStringWithPadding(paramOffsetNum - dataOffset, 8) << " (0x" << numToHexStringWithPadding(paramOffsetNum, 0) << " for .pac relative offset)" << "\n";
 
-					// Get the value of the parameter at the targeted index, and create string rep. Note that because all parameters are 8 bytes long (4 bytes for type identifier, 4 for value), getting the value of parameter i means we look ((8*i) + 4) bytes in relative to the param offset.
-					std::size_t targetParamIndexOffset = 0;
-					std::string intermediateParamValString = "";
+					// Create our param target. This holds the current value of the target parameter, as well as where it's stored in the file, and is the variable that we'll be modifying to make changes to the parameter's value and type.
+					lava::paramTarget neoParamVals(*this, paramOffsetNum, currTarget->paramIndex);
 
-					auto setTargetParam = [&](int targetParam)
+					if (currTarget->paramType == INT_MAX || neoParamVals.getParamTypeNum() == currTarget->paramType)
 					{
-						if (paramOffsetNum != SIZE_MAX && targetParam >= 0)
+						// Report location of current ping, as well as its paramOffset. Note, the first paramOffset we report is non .pac adjusted since that's the one you'll see in PSAC, which is what I expect most people will be looking for. The adjusted value is provided second.
+						logOut << "\t[0x" << numToHexStringWithPadding(currPing, 8) << "]: Params @ 0x" << numToHexStringWithPadding(paramOffsetNum - dataOffset, 8);
+						std::cout << "\t[0x" << numToHexStringWithPadding(currPing, 8) << "]: Params @ 0x" << numToHexStringWithPadding(paramOffsetNum - dataOffset, 8);
+
+						// Initialize values for loop
+						bool redirectUsed = 0;
+						bool previousModUsed = 0;
+						std::size_t modItr = 0;
+						bool matchFound = 0;
+						bool doScalarActionPrint = 0;
+						bool doScalarFinalPrint = 0;
+						const movesetPatchMod* currMod = nullptr;
+
+						logOut << ", Param Val: " << neoParamVals.getParamValue();
+						std::cout << ", Param Val: " << neoParamVals.getParamValue();
+						if (neoParamVals.getParamTypeNum() == lava::movesetParamTypes::varTy_SCLR)
 						{
-							targetParamIndexOffset = ((8 * targetParam) + 4);
-							paramVal = contents.getBytes(4, paramOffsetNum + targetParamIndexOffset, numGotten);
-							paramValString = numToHexStringWithPadding(hexVecToNum(paramVal), 8);
-							intermediateParamValString = paramValString;
-							paramValNum = hexStringToNum(paramValString);
-							// Get the value of the parameter's type identifier. This ensures that variables are manipulated in the expected way.
-							paramTypeIdentifier = contents.getBytes(4, paramOffsetNum + targetParamIndexOffset - 4, numGotten);
-							paramTypeIDNum = lava::hexVecToNum(paramTypeIdentifier);
+							logOut << " (Scalar = " << neoParamVals.getParamValueNum() / lava::floatDenominator << ")";
+							std::cout << " (Scalar = " << neoParamVals.getParamValueNum() / lava::floatDenominator << ")";
 						}
-					};
-					auto saveTargetParam = [&]()
-					{
-						if (paramOffsetNum != SIZE_MAX)
+						logOut << "\n";
+						std::cout << "\n";
+
+						for (std::size_t modItr = 0; modItr < modificationCount; modItr++)
 						{
-							contents.setBytes(numToHexVec(hexStringToNum(paramValString)), paramOffsetNum + targetParamIndexOffset);
-							contents.setBytes(numToHexVec(paramTypeIDNum), paramOffsetNum + targetParamIndexOffset - 4);
-						}
-					};
+							// Record pointer to current modification
+							currMod = &patchIn.modifications[modItr];
 
-					setTargetParam(currTarget->paramIndex);
-
-					//paramVal = contents.getBytes(4, paramOffsetNum + targetParamIndexOffset, numGotten);
-					//paramValString = numToHexStringWithPadding(hexVecToNum(paramVal), 8);
-					//paramValNum = hexStringToNum(paramValString);
-
-					//// Get the value of the parameter's type identifier. This ensures that variables are manipulated in the expected way.
-					//paramTypeIdentifier = contents.getBytes(4, paramOffsetNum + targetParamIndexOffset - 4, numGotten);
-					//paramTypeIDNum = lava::hexVecToNum(paramTypeIdentifier);
-
-					// Report value
-					logOut << "\t\tParam Val: " << paramVal;
-					std::cout << "\t\tParam Val: " << paramVal;
-					if (paramTypeIDNum == lava::movesetVarTypes::varTy_SCLR)
-					{
-						logOut << " (Scalar = " << paramValNum / lava::floatDenominator << ")";
-						std::cout << " (Scalar = " << paramValNum / lava::floatDenominator << ")";
-					}
-					// Initialize values for loop
-					std::size_t modItr = 0;
-					bool matchFound = 0;
-					bool doScalarActionPrint = 0;
-					bool doScalarFinalPrint = 0;
-					const movesetPatchMod* currMod = nullptr;
-
-					for (std::size_t modItr = 0; modItr < modificationCount; modItr++)
-					{
-						// Record pointer to current modification
-						currMod = &patchIn.modifications[modItr];
-
-						// Handle redirect
-						if (currMod->redirect != INT_MAX)
-						{
-							setTargetParam(currMod->redirect);
-							/*targetParamIndexOffset = ((8 * currMod->redirect) + 4);
-							paramVal = contents.getBytes(4, paramOffsetNum + targetParamIndexOffset, numGotten);
-							paramValString = numToHexStringWithPadding(hexVecToNum(paramVal), 8);
-							paramValNum = hexStringToNum(paramValString);
-
-							paramTypeIdentifier = contents.getBytes(4, paramOffsetNum + targetParamIndexOffset - 4, numGotten);
-							paramTypeIDNum = lava::hexVecToNum(paramTypeIdentifier);*/
-							logOut << "\t\tParameter Redirect Triggered: New target is Param Index " << currMod->redirect << "\n";
-							logOut << "\t\tParam Val: " << paramValString;
-							std::cout << "\t\tParameter Redirect Triggered: New target is Param Index " << currMod->redirect << "\n";
-							std::cout << "\t\tParam Val: " << paramValString;
-							if (paramTypeIDNum == lava::movesetVarTypes::varTy_SCLR)
+							// Handle redirect
+							if (currMod->paramIndexRedirect != INT_MAX)
 							{
-								logOut << " (Scalar = " << paramValNum / lava::floatDenominator << ")";
-								std::cout << " (Scalar = " << paramValNum / lava::floatDenominator << ")";
+								neoParamVals = lava::paramTarget(*this, paramOffsetNum, currMod->paramIndexRedirect);
+
+								redirectUsed = 1;
 							}
-							logOut << " (Redirected)\n";
-							std::cout << " (Redirected)\n";
-						}
-
-						// If the current mod's match value matches the paramValue string
-						if (hexStrComp(currMod->match, paramValString))
-						{
-							// Record that the modification was used and report it to the console.
-							matchFound = 1;
-							results.timesTargetsHit[targetItr][modItr]++;
-
-							logOut << "\n\t\tFOUND MATCH!\n";
-							logOut << "\t\tModification #" << modItr << ":\n";
-							std::cout << "\n\t\tFOUND MATCH!\n";
-							std::cout << "\t\tModification #" << modItr << ":\n";
-
-							// Initialize variables for use in loop
-							const movesetPatchModAction* currAction = nullptr;
-							const std::string canonParamValString = paramValString;
-							std::string intermediateParamValString = paramValString;
-							bool actionOccured = 0;
-
-							// Iterate through each action:
-							for (std::size_t actionItr = 0; actionItr < currMod->actions.size(); actionItr++)
+							else
 							{
-								// Store intermediate paramString
-								intermediateParamValString = paramValString;
-								// Reset action tracker
-								actionOccured = 0;
-								doScalarActionPrint = 0;
-								doScalarFinalPrint = 0;
+								neoParamVals = lava::paramTarget(*this, paramOffsetNum, currTarget->paramIndex);
 
-								// Do changelog reporting
-								logOut << "\t\t\tAction #" << actionItr << ": ";
-								std::cout << "\t\t\tAction #" << actionItr << ": ";
-								currAction = &currMod->actions[actionItr];
-								// Perform the appropriate changes based on the type of action
-								switch (currAction->actionType)
+								redirectUsed = 0;
+							}
+
+							bool matchEvalRes = 0;
+							std::string tempEvalStr = currMod->match;
+							for (std::size_t i = 0; i < tempEvalStr.size(); i++)
+							{
+								if (tempEvalStr[i] == 'X')
 								{
-									case modActionTypes::actTy_DO_NOTHING:
+									tempEvalStr[i] = neoParamVals.getParamValueString()[i];
+								}
+							}
+							switch (currMod->matchMethod)
+							{
+								case lava::matchEvaluationMethod::mtEvl_EQUALS:
+								{
+									matchEvalRes = hexStrComp(tempEvalStr, neoParamVals.getParamValueString());
+									break;
+								}
+								case lava::matchEvaluationMethod::mtEvl_NOT_EQUALS:
+								{
+									matchEvalRes = !hexStrComp(tempEvalStr, neoParamVals.getParamValueString());
+									break;
+								}
+								case lava::matchEvaluationMethod::mtEvl_GREATER:
+								{
+									matchEvalRes = lava::hexStringToNum(tempEvalStr) > neoParamVals.getParamValueNum();
+									break;
+								}
+								case lava::matchEvaluationMethod::mtEvl_GREATER_OE:
+								{
+									matchEvalRes = lava::hexStringToNum(tempEvalStr) >= neoParamVals.getParamValueNum();
+									break;
+								}
+								case lava::matchEvaluationMethod::mtEvl_LESSER:
+								{
+									matchEvalRes = lava::hexStringToNum(tempEvalStr) < neoParamVals.getParamValueNum();
+									break;
+								}
+								case lava::matchEvaluationMethod::mtEvl_LESSER_OE:
+								{
+									matchEvalRes = lava::hexStringToNum(tempEvalStr) <= neoParamVals.getParamValueNum();
+									break;
+								}
+								case lava::matchEvaluationMethod::mtEvl_BIT_AND:
+								{
+									matchEvalRes = lava::hexStringToNum(tempEvalStr) & neoParamVals.getParamValueNum();
+									break;
+								}
+								case lava::matchEvaluationMethod::mtEvl_BIT_XOR:
+								{
+									matchEvalRes = lava::hexStringToNum(tempEvalStr) ^ neoParamVals.getParamValueNum();
+									break;
+								}
+								default:
+								{
+									matchEvalRes = 0;
+									break;
+								}
+							}
+
+							bool extraConditionRes = 0;
+							switch (currMod->extraCondition)
+							{
+								case lava::extraConditionTypes::exCon_PREV_USED:
+								{
+									extraConditionRes = previousModUsed;
+									break;
+								}
+								case lava::extraConditionTypes::exCon_PREV_NOT_USED:
+								{
+									extraConditionRes = !previousModUsed;
+									break;
+								}
+								default:
+								{
+									extraConditionRes = 1;
+									break;
+								}
+							}
+
+							// If the current mod's match value matches the paramValue string
+							if (matchEvalRes && extraConditionRes)
+							{
+								// Record that the modification was used and report it to the console.
+								matchFound = 1;
+								previousModUsed = 1;
+								results.timesTargetsHit[targetItr][modItr]++;
+
+								logOut << "\t\tModification #" << modItr << ":\n";
+								std::cout << "\t\tModification #" << modItr << ":\n";
+								if (redirectUsed)
+								{
+									logOut << "\t\t(Redirect Triggered, New Target Index is " << currMod->paramIndexRedirect << ")\n";
+									std::cout << "\t\t(Redirect Triggered, New Target Index is " << currMod->paramIndexRedirect << ")\n";
+								}
+
+								if (1 || currMod->matchMethod)
+								{
+									logOut << "\t\tFound match (Match:" << currMod->match << " ";
+									std::cout << "\t\tFound match (Match:" << currMod->match << " ";
+									switch (currMod->matchMethod)
 									{
-										logOut << "[NOTHING]";
-										std::cout << "[NOTHING]";
-										break;
-									}
-									case modActionTypes::actTy_REPLACE:
-									{
-										actionOccured = 1;
-										for (std::size_t i = 0; i < canonParamLengthStr; i++)
+										case lava::matchEvaluationMethod::mtEvl_EQUALS:
 										{
-											if (currAction->value[i] != 'X')
-											{
-												paramValString[i] = currAction->value[i];
-											}
+											std::cout << "==";
+											logOut << "==";
+											break;
 										}
-										logOut << "[REP]";
-										std::cout << "[REP]";
-										break;
-									}
-									case modActionTypes::actTy_ADD:
-									{
-										actionOccured = 1;
-										unsigned int incomingValNum = hexStringToNum(currAction->value);
-										paramValNum += incomingValNum;
-										paramValString = numToHexStringWithPadding(paramValNum, 8);
-										logOut << "[ADD]";
-										std::cout << "[ADD]";
-										break;
-									}
-									case modActionTypes::actTy_SUB:
-									{
-										actionOccured = 1;
-										unsigned int incomingValNum = hexStringToNum(currAction->value);
-										paramValNum -= incomingValNum;
-										paramValString = numToHexStringWithPadding(paramValNum, 8);
-										logOut << "[SUB]";
-										std::cout << "[SUB]";
-										break;
-									}
-									case modActionTypes::actTy_MUL:
-									{
-										actionOccured = 1;
-										doScalarActionPrint = 1;
-										//float incomingValNum = hexStringToNum(currAction->value) / lava::floatDenominator;
-										unsigned int incomingValNum = hexStringToNum(currAction->value);
-										paramValNum *= incomingValNum;
-										paramValString = numToHexStringWithPadding(paramValNum, 8);
-										logOut << "[MUL]";
-										std::cout << "[MUL]";
-										break;
-									}
-									case modActionTypes::actTy_DIV:
-									{
-										actionOccured = 1;
-										doScalarActionPrint = 1;
-										//float incomingValNum = hexStringToNum(currAction->value) / lava::floatDenominator;
-										unsigned int incomingValNum = hexStringToNum(currAction->value);
-										paramValNum /= incomingValNum;
-										paramValString = numToHexStringWithPadding(paramValNum, 8);
-										logOut << "[DIV]";
-										std::cout << "[DIV]";
-										break;
-									}
-									case modActionTypes::actTy_BIT_AND:
-									{
-										actionOccured = 1;
-										paramValNum &= hexStringToNum(currAction->value);
-										paramValString = numToHexStringWithPadding(paramValNum, 8);
-										logOut << "[BIT_AND]";
-										std::cout << "[BIT_AND]";
-										break;
-									}
-									case modActionTypes::actTy_BIT_OR:
-									{
-										actionOccured = 1;
-										paramValNum |= hexStringToNum(currAction->value);
-										paramValString = numToHexStringWithPadding(paramValNum, 8);
-										logOut << "[BIT_OR]";
-										std::cout << "[BIT_OR]";
-										break;
-									}
-									case modActionTypes::actTy_BIT_XOR:
-									{
-										actionOccured = 1;
-										paramValNum ^= hexStringToNum(currAction->value);
-										paramValString = numToHexStringWithPadding(paramValNum, 8);
-										logOut << "[BIT_XOR]";
-										std::cout << "[BIT_XOR]";
-										break;
-									}
-									case modActionTypes::actTy_RETARGET_PARAM:
-									{
-										if (hexStringToNum(currAction->value) >= 0)
+										case lava::matchEvaluationMethod::mtEvl_NOT_EQUALS:
 										{
-											//actionOccured = 1;
-											saveTargetParam();
-											setTargetParam(hexStringToNum(currAction->value));
-											logOut << "[TARGET_PARAM]\n";
-											std::cout << "[TARGET_PARAM]\n";
-											logOut << "\t\t\tParameter Redirect Triggered: New target is Param Index " << hexStringToNum(currAction->value) << "\n";
-											logOut << "\t\t\tParam Val: " << paramValString;
-											std::cout << "\t\t\tParameter Redirect Triggered: New target is Param Index " << hexStringToNum(currAction->value) << "\n";
-											std::cout << "\t\t\tParam Val: " << paramValString;
-											if (paramTypeIDNum == lava::movesetVarTypes::varTy_SCLR)
-											{
-												logOut << " (Scalar = " << paramValNum / lava::floatDenominator << ")";
-												std::cout << " (Scalar = " << paramValNum / lava::floatDenominator << ")";
-											}
-											logOut << " (Redirected)\n";
-											std::cout << " (Redirected)\n";
+											std::cout << "!=";
+											logOut << "!=";
+											break;
 										}
+										case lava::matchEvaluationMethod::mtEvl_GREATER:
+										{
+											std::cout << ">";
+											logOut << ">";
+											break;
+										}
+										case lava::matchEvaluationMethod::mtEvl_GREATER_OE:
+										{
+											std::cout << ">=";
+											logOut << ">=";
+											break;
+										}
+										case lava::matchEvaluationMethod::mtEvl_LESSER:
+										{
+											std::cout << "<";
+											logOut << "<";
+											break;
+										}
+										case lava::matchEvaluationMethod::mtEvl_LESSER_OE:
+										{
+											std::cout << "<=";
+											logOut << "<=";
+											break;
+										}
+										case lava::matchEvaluationMethod::mtEvl_BIT_AND:
+										{
+											std::cout << "&";
+											logOut << "&";
+											break;
+										}
+										case lava::matchEvaluationMethod::mtEvl_BIT_XOR:
+										{
+											std::cout << "^";
+											logOut << "^";
+											break;
+										}
+										default:
+										{
+											break;
+										}
+									}
+									logOut << " Param Value:" << neoParamVals.getParamValueString() << ")\n";
+									std::cout << " Param Value:" << neoParamVals.getParamValueString() << ")\n";
+								}
+								else
+								{
+									logOut << "\t\tFound match (Pattern: " << currMod->match << ", Param Value: " << neoParamVals.getParamValueString() << ")\n";
+									std::cout << "\t\tFound match (Pattern: " << currMod->match << ", Param Value: " << neoParamVals.getParamValueString() << ")\n";
+								}
+
+								if (currMod->extraCondition)
+								{
+									std::cout << "\t\tExtra Condition also met:";
+									logOut << "\t\tExtra Condition also met:";
+									switch (currMod->extraCondition)
+									{
+									case lava::extraConditionTypes::exCon_PREV_USED:
+									{
+										std::cout << " [REQ_PREV]\n";
+										logOut << " [REQ_PREV]\n";
+										break;
+									}
+									case lava::extraConditionTypes::exCon_PREV_NOT_USED:
+									{
+										std::cout << " [REQ_NOT_PREV]\n";
+										logOut << " [REQ_NOT_PREV]\n";
 										break;
 									}
 									default:
 									{
 										break;
 									}
+									}
 								}
 
-								if (actionOccured)
+								// Initialize variables for use in loop
+								const movesetPatchModAction* currAction = nullptr;
+								const std::string canonParamValString = neoParamVals.getParamValueString();
+								std::string intermediateParamValString = neoParamVals.getParamValueString();
+								bool actionOccured = 0;
+
+								// Iterate through each action:
+								for (std::size_t actionItr = 0; actionItr < currMod->actions.size(); actionItr++)
 								{
-									if (paramTypeIDNum == lava::movesetVarTypes::varTy_SCLR || doScalarActionPrint)
+									// Store intermediate paramString
+									intermediateParamValString = neoParamVals.getParamValueString();
+									// Reset action tracker
+									actionOccured = 0;
+									doScalarActionPrint = 0;
+									doScalarFinalPrint = 0;
+
+									// Do changelog reporting
+									logOut << "\t\t\tAction #" << actionItr << ": ";
+									std::cout << "\t\t\tAction #" << actionItr << ": ";
+									currAction = &currMod->actions[actionItr];
+									// Perform the appropriate changes based on the type of action
+									switch (currAction->actionType)
 									{
-										logOut << " Value = " << currAction->value;
-										std::cout << " Value = " << currAction->value;
-										float incomingFlt = hexStringToNum(currAction->value) / lava::floatDenominator;
-										logOut << " (Scalar = " << incomingFlt << ")";
-										std::cout << " (Scalar = " << incomingFlt << ")";
-										float intermediateFlt = lava::hexStringToNum(intermediateParamValString) / lava::floatDenominator;
-										logOut << "\n\t\t\t\t" << intermediateParamValString << " (" << intermediateFlt << ") -> " << paramValString << " (" << paramValNum / lava::floatDenominator << ")\n";
-										std::cout << "\n\t\t\t\t" << intermediateParamValString << " (" << intermediateFlt << ") -> " << paramValString << " (" << paramValNum / lava::floatDenominator << ")\n";
+										case modActionTypes::actTy_DO_NOTHING:
+										{
+											logOut << "[NOP]";
+											std::cout << "[NOP]";
+											break;
+										}
+										case modActionTypes::actTy_REPLACE:
+										{
+											actionOccured = 1;
+
+											std::string manipStr = neoParamVals.getParamValueString();
+											for (std::size_t i = 0; i < canonParamLengthStr; i++)
+											{
+												if (currAction->value[i] != 'X')
+												{
+													manipStr[i] = currAction->value[i];
+												}
+											}
+											neoParamVals.updateParamValue(manipStr);
+
+											logOut << "[REP]";
+											std::cout << "[REP]";
+											break;
+										}
+										case modActionTypes::actTy_INT_ADD:
+										{
+											actionOccured = 1;
+
+											unsigned int incomingValNum = hexStringToNum(currAction->value);
+											unsigned int manipNum = neoParamVals.getParamValueNum();
+											manipNum += incomingValNum;
+											neoParamVals.updateParamValue(manipNum);
+
+											logOut << "[INT_ADD]";
+											std::cout << "[INT_ADD]";
+											break;
+										}
+										case modActionTypes::actTy_INT_SUB:
+										{
+											actionOccured = 1;
+
+											unsigned int incomingValNum = hexStringToNum(currAction->value);
+											unsigned int manipNum = neoParamVals.getParamValueNum();
+											manipNum -= incomingValNum;
+											neoParamVals.updateParamValue(manipNum);
+
+											logOut << "[INT_SUB]";
+											std::cout << "[INT_SUB]";
+											break;
+										}
+										case modActionTypes::actTy_INT_MUL:
+										{
+											actionOccured = 1;
+
+											unsigned int incomingValNum = hexStringToNum(currAction->value);
+											unsigned int manipNum = neoParamVals.getParamValueNum();
+											manipNum *= incomingValNum;
+											neoParamVals.updateParamValue(manipNum);
+
+											logOut << "[INT_MUL]";
+											std::cout << "[INT_MUL]";
+											break;
+										}
+										case modActionTypes::actTy_INT_DIV:
+										{
+											actionOccured = 1;
+
+											unsigned int incomingValNum = hexStringToNum(currAction->value);
+											unsigned int manipNum = neoParamVals.getParamValueNum();
+											manipNum /= incomingValNum;
+											neoParamVals.updateParamValue(manipNum);
+
+											logOut << "[INT_DIV]";
+											std::cout << "[INT_DIV]";
+											break;
+										}
+										case modActionTypes::actTy_FLT_ADD:
+										{
+											actionOccured = 1;
+											doScalarActionPrint = 1;
+
+											unsigned int incomingValNum = hexStringToNum(currAction->value);
+											unsigned int manipNum = neoParamVals.getParamValueNum();
+											manipNum += incomingValNum;
+											neoParamVals.updateParamValue(manipNum);
+
+											logOut << "[FLT_ADD]";
+											std::cout << "[FLT_ADD]";
+											break;
+										}
+										case modActionTypes::actTy_FLT_SUB:
+										{
+											actionOccured = 1;
+											doScalarActionPrint = 1;
+
+											unsigned int incomingValNum = hexStringToNum(currAction->value);
+											unsigned int manipNum = neoParamVals.getParamValueNum();
+											manipNum -= incomingValNum;
+											neoParamVals.updateParamValue(manipNum);
+
+											logOut << "[FLT_SUB]";
+											std::cout << "[FLT_SUB]";
+											break;
+										}
+										case modActionTypes::actTy_FLT_MUL:
+										{
+											actionOccured = 1;
+											doScalarActionPrint = 1;
+
+											unsigned int incomingValNum = hexStringToNum(currAction->value);
+											unsigned int manipNum = neoParamVals.getParamValueNum();
+											manipNum *= incomingValNum;
+											neoParamVals.updateParamValue(manipNum);
+
+											logOut << "[FLT_MUL]";
+											std::cout << "[FLT_MUL]";
+											break;
+										}
+										case modActionTypes::actTy_FLT_DIV:
+										{
+											actionOccured = 1;
+											doScalarActionPrint = 1;
+
+											unsigned int incomingValNum = hexStringToNum(currAction->value);
+											unsigned int manipNum = neoParamVals.getParamValueNum();
+											manipNum /= incomingValNum;
+											neoParamVals.updateParamValue(manipNum);
+
+											logOut << "[FLT_DIV]";
+											std::cout << "[FLT_DIV]";
+											break;
+										}
+										case modActionTypes::actTy_BIT_AND:
+										{
+											actionOccured = 1;
+
+											unsigned int incomingValNum = hexStringToNum(currAction->value);
+											unsigned int manipNum = neoParamVals.getParamValueNum();
+											manipNum &= incomingValNum;
+											neoParamVals.updateParamValue(manipNum);
+
+											logOut << "[BIT_AND]";
+											std::cout << "[BIT_AND]";
+											break;
+										}
+										case modActionTypes::actTy_BIT_OR:
+										{
+											actionOccured = 1;
+
+											unsigned int incomingValNum = hexStringToNum(currAction->value);
+											unsigned int manipNum = neoParamVals.getParamValueNum();
+											manipNum |= incomingValNum;
+											neoParamVals.updateParamValue(manipNum);
+
+											logOut << "[BIT_OR]";
+											std::cout << "[BIT_OR]";
+											break;
+										}
+										case modActionTypes::actTy_BIT_XOR:
+										{
+											actionOccured = 1;
+
+											unsigned int incomingValNum = hexStringToNum(currAction->value);
+											unsigned int manipNum = neoParamVals.getParamValueNum();
+											manipNum ^= incomingValNum;
+											neoParamVals.updateParamValue(manipNum);
+
+											logOut << "[BIT_XOR]";
+											std::cout << "[BIT_XOR]";
+											break;
+										}
+										case modActionTypes::actTy_BIT_SHIFT_L:
+										{
+											actionOccured = 1;
+
+											unsigned int incomingValNum = hexStringToNum(currAction->value);
+											unsigned int manipNum = neoParamVals.getParamValueNum();
+											manipNum = manipNum << incomingValNum;
+											neoParamVals.updateParamValue(manipNum);
+
+											logOut << "[BIT_SHIFT_L]";
+											std::cout << "[BIT_SHIFT_L]";
+											break;
+										}
+										case modActionTypes::actTy_BIT_SHIFT_R:
+										{
+											actionOccured = 1;
+
+											unsigned int incomingValNum = hexStringToNum(currAction->value);
+											unsigned int manipNum = neoParamVals.getParamValueNum();
+											manipNum = manipNum >> incomingValNum;
+											neoParamVals.updateParamValue(manipNum);
+
+											logOut << "[BIT_SHIFT_R]";
+											std::cout << "[BIT_SHIFT_R]";
+											break;
+										}
+										case modActionTypes::actTy_BIT_ROTATE_L:
+										{
+											actionOccured = 1;
+
+											unsigned int incomingValNum = hexStringToNum(currAction->value);
+											unsigned int manipNum = neoParamVals.getParamValueNum();
+											unsigned int temp = manipNum;
+											manipNum = manipNum << incomingValNum;
+											temp = temp >> (32 - incomingValNum);
+											manipNum |= temp;
+											neoParamVals.updateParamValue(manipNum);
+
+											logOut << "[BIT_ROTATE_L]";
+											std::cout << "[BIT_ROTATE_L]";
+											break;
+										}
+										case modActionTypes::actTy_BIT_ROTATE_R:
+										{
+											actionOccured = 1;
+
+											unsigned int incomingValNum = hexStringToNum(currAction->value);
+											unsigned int manipNum = neoParamVals.getParamValueNum();
+											unsigned int temp = manipNum;
+											manipNum = manipNum >> incomingValNum;
+											temp = temp << (32 - incomingValNum);
+											manipNum |= temp;
+											neoParamVals.updateParamValue(manipNum);
+
+											logOut << "[BIT_ROTATE_R]";
+											std::cout << "[BIT_ROTATE_R]";
+											break;
+										}
+										case modActionTypes::actTy_RETARGET_PARAM:
+										{
+											if (hexStringToNum(currAction->value) >= 0)
+											{
+												actionOccured = 1;
+												neoParamVals.saveParamToContents();
+												neoParamVals = lava::paramTarget(*this, paramOffsetNum, lava::hexStringToNum(currAction->value));
+												logOut << "[TARGET_PARAM]\n";
+												std::cout << "[TARGET_PARAM]\n";
+												logOut << "\t\t\tParameter Redirect Triggered: New target is Param Index " << hexStringToNum(currAction->value) << "\n";
+												logOut << "\t\t\tParam Val: " << neoParamVals.getParamValueString();
+												std::cout << "\t\t\tParameter Redirect Triggered: New target is Param Index " << hexStringToNum(currAction->value) << "\n";
+												std::cout << "\t\t\tParam Val: " << neoParamVals.getParamValueString();
+												if (neoParamVals.getParamTypeNum() == lava::movesetParamTypes::varTy_SCLR)
+												{
+													logOut << " (Scalar = " << neoParamVals.getParamValueNum() / lava::floatDenominator << ")";
+													std::cout << " (Scalar = " << neoParamVals.getParamValueNum() / lava::floatDenominator << ")";
+												}
+												logOut << " (Redirected)\n";
+												std::cout << " (Redirected)\n";
+											}
+											break;
+										}
+										case modActionTypes::actTy_CONVERT_PARAM:
+										{
+											logOut << "[TARGET_PARAM]";
+											std::cout << "[TARGET_PARAM]";
+											unsigned int incomingValNum = lava::hexStringToNum(currAction->value);
+											if (incomingValNum < lava::movesetParamTypes::variableTypeCount)
+											{
+												switch (incomingValNum)
+												{
+													case lava::movesetParamTypes::varTy_INT:
+													{
+														if (neoParamVals.getParamTypeNum() == lava::movesetParamTypes::varTy_SCLR)
+														{
+															unsigned int manipNum = neoParamVals.getParamValueNum();
+															manipNum /= lava::floatDenominator;
+															neoParamVals.updateParamValue(manipNum);
+														}
+														break;
+													}
+													case lava::movesetParamTypes::varTy_SCLR:
+													{
+														doScalarActionPrint = 1;
+														if (neoParamVals.getParamTypeNum() == lava::movesetParamTypes::varTy_INT)
+														{
+															unsigned int manipNum = neoParamVals.getParamValueNum();
+															manipNum *= lava::floatDenominator;
+															neoParamVals.updateParamValue(manipNum);
+														}
+														break;
+													}
+													case lava::movesetParamTypes::varTy_PNTR:
+													{
+														break;
+													}
+													case lava::movesetParamTypes::varTy_BOOL:
+													{
+														break;
+													}
+													case lava::movesetParamTypes::varTy_4:
+													{
+														break;
+													}
+													case lava::movesetParamTypes::varTy_VAR:
+													{
+														break;
+													}
+													case lava::movesetParamTypes::varTy_REQ:
+													{
+														break;
+													}
+													default:
+													{
+														break;
+													}
+												}
+												neoParamVals.updateParamType(incomingValNum);
+											}
+											else
+											{
+												logOut << "\t\t\tTarget parameter type (" << incomingValNum << ") was invalid.\n";
+												std::cout << "\t\t\tTarget parameter type (" << incomingValNum << ") was invalid.\n";
+											}
+										}
+										default:
+										{
+											logOut << "[INVALID_TYPE]";
+											std::cout << "[INVALID_TYPE]";
+											break;
+										}
+									}
+
+									if (actionOccured)
+									{
+										if (neoParamVals.getParamTypeNum() == lava::movesetParamTypes::varTy_SCLR || doScalarActionPrint)
+										{
+											logOut << " Value = " << currAction->value;
+											std::cout << " Value = " << currAction->value;
+											float incomingFlt = hexStringToNum(currAction->value) / lava::floatDenominator;
+											logOut << " (Scalar = " << incomingFlt << ")";
+											std::cout << " (Scalar = " << incomingFlt << ")";
+											float intermediateFlt = lava::hexStringToNum(intermediateParamValString) / lava::floatDenominator;
+											logOut << "\n\t\t\t\t" << intermediateParamValString << " (" << intermediateFlt << ") -> " << neoParamVals.getParamValueString() << " (" << neoParamVals.getParamValueNum() / lava::floatDenominator << ")\n";
+											std::cout << "\n\t\t\t\t" << intermediateParamValString << " (" << intermediateFlt << ") -> " << neoParamVals.getParamValueString() << " (" << neoParamVals.getParamValueNum() / lava::floatDenominator << ")\n";
+										}
+										else
+										{
+											logOut << " Value = " << currAction->value << "\n\t\t\t\t" << intermediateParamValString << " -> " << neoParamVals.getParamValueString() << "\n";
+											std::cout << " Value = " << currAction->value << "\n\t\t\t\t" << intermediateParamValString << " -> " << neoParamVals.getParamValueString() << "\n";
+										}
 									}
 									else
 									{
-										logOut << " Value = " << currAction->value << "\n\t\t\t\t" << intermediateParamValString << " -> " << paramValString << "\n";
-										std::cout << " Value = " << currAction->value << "\n\t\t\t\t" << intermediateParamValString << " -> " << paramValString << "\n";
+										std::cout << "\n";
+										logOut << "\n";
 									}
 								}
 
-								// Update paramValNum representation
-								paramValNum = lava::hexStringToNum(paramValString);
-							}
-							bool lockUsed = 0;
-							for (std::size_t i = 0; i < 8; i++)
-							{
-								if (currMod->locked[i] == '1' && paramValString[i] != canonParamValString[i])
+								// Handle lock
+								bool lockUsed = 0;
+								for (std::size_t i = 0; i < 8; i++)
 								{
-									paramValString[i] = canonParamValString[i];
-									lockUsed = 1;
+									std::string lockApplicationStr = neoParamVals.getParamValueString();
+									if (currMod->locked[i] == '1' && lockApplicationStr[i] != canonParamValString[i])
+									{
+										lockApplicationStr[i] = canonParamValString[i];
+										lockUsed = 1;
+									}
+									neoParamVals.updateParamValue(lockApplicationStr);
 								}
+								if (lockUsed)
+								{
+									std::cout << "\t\t\tLock (" << currMod->locked << "): " << neoParamVals.getParamValueString() << "\n";
+									logOut << "\t\t\tLock (" << currMod->locked << "): " << neoParamVals.getParamValueString() << "\n";
+								}
+
+								// Write result to contents.
+								neoParamVals.saveParamToContents();
+
+								// Report results:
+								logOut << "\t\t\tFinal Value: " << contents.getBytes(4, neoParamVals.getParamOffsetNum() + neoParamVals.getParamIndexOffset() + 4, numGotten);
+								std::cout << "\t\t\tFinal Value: " << contents.getBytes(4, neoParamVals.getParamOffsetNum() + neoParamVals.getParamIndexOffset() + 4, numGotten);
+								// Do scalar report if necessary
+								if (neoParamVals.getParamTypeNum() == lava::movesetParamTypes::varTy_SCLR || doScalarFinalPrint)
+								{
+									logOut << " (Scalar = " << neoParamVals.getParamValueNum() / lava::floatDenominator << ")";
+									std::cout << " (Scalar = " << neoParamVals.getParamValueNum() / lava::floatDenominator << ")";
+								}
+								logOut << "\n";
+								std::cout << "\n";
 							}
-							if (lockUsed)
+							else
 							{
-								std::cout << "\t\t\tLock (" << currMod->locked << "): " << paramValString << "\n";
-								logOut << "\t\t\tLock (" << currMod->locked << "): " << paramValString << "\n";
-
-								// Update paramValNum representation
-								paramValNum = lava::hexStringToNum(paramValString);
+								previousModUsed = 0;
 							}
-
-							// Write result to contents.
-							saveTargetParam();
-							//contents.setBytes(numToHexVec(hexStringToNum(paramValString)), paramOffsetNum + targetParamIndexOffset);
-
-							// Report results:
-							logOut << "\t\t\tFinal Value: " << contents.getBytes(4, paramOffsetNum + targetParamIndexOffset, numGotten);
-							std::cout << "\t\t\tFinal Value: " << contents.getBytes(4, paramOffsetNum + targetParamIndexOffset, numGotten);
-							// Do scalar report if necessary
-							if (paramTypeIDNum == lava::movesetVarTypes::varTy_SCLR || doScalarFinalPrint)
-							{
-								logOut << " (Scalar = " << paramValNum / lava::floatDenominator << ")";
-								std::cout << " (Scalar = " << paramValNum / lava::floatDenominator << ")";
-							}
+						}
+						if (!matchFound)
+						{
 							logOut << "\n";
 							std::cout << "\n";
 						}
-						// Advance mod itr
-					}
-					if (!matchFound)
-					{
-						logOut << "\n";
-						std::cout << "\n";
 					}
 				}
 				else
@@ -1018,8 +1422,103 @@ namespace lava
 		return results;
 	}
 
+	paramTarget::paramTarget() {};
+	paramTarget::paramTarget(movesetFile& parent, std::size_t paramOffsetIn, int paramIndexIn)
+	{
+		if (parent.contents.size)
+		{
+			parentPtr = &parent;
+			targetParamIndex = paramIndexIn;
+			targetParamIndexOffset = (8 * paramIndexIn);
+			updateParamOffset(paramOffsetIn);
+			std::size_t numGotten;
+			updateParamType(parentPtr->contents.getBytes(4, this->paramOffsetNum + targetParamIndexOffset, numGotten));
+			updateParamValue(parentPtr->contents.getBytes(4, this->paramOffsetNum + targetParamIndexOffset + 4, numGotten));
 
+		}
+	}
+	int paramTarget::getParamIndex()
+	{
+		return targetParamIndex;
+	}
+	std::size_t paramTarget::getParamIndexOffset()
+	{
+		return targetParamIndexOffset;
+	}
+	std::size_t paramTarget::getParamOffsetNum()
+	{
+		return paramOffsetNum;
+	}
+	std::vector<char> paramTarget::getParamOffset()
+	{
+		return paramOffset;
+	}
+	std::size_t paramTarget::getParamTypeNum()
+	{
+		return paramTypeIdentifierNum;
+	}
+	std::vector<char> paramTarget::getParamType()
+	{
+		return paramTypeIdentifier;
+	}
+	std::size_t paramTarget::getParamValueNum()
+	{
+		return paramValueNum;
+	}
+	std::string paramTarget::getParamValueString()
+	{
+		return paramValueString;
+	}
+	std::vector<char> paramTarget::getParamValue()
+	{
+		return paramValue;
+	}
+	void paramTarget::updateParamOffset(std::size_t paramOffsetNumIn)
+	{
+		paramOffsetNum = paramOffsetNumIn;
+		paramOffset = lava::numToHexVec(paramOffsetNum);
+	}
+	void paramTarget::updateParamOffset(std::vector<char> paramOffsetIn)
+	{
+		paramOffset = paramOffsetIn;
+		paramOffsetNum = lava::hexVecToNum(paramOffset);
+	}
+	void paramTarget::updateParamType(std::size_t paramTypeIdentifierNumIn)
+	{
+		paramTypeIdentifierNum = paramTypeIdentifierNumIn;
+		paramTypeIdentifier = lava::numToHexVec(paramTypeIdentifierNum);
+	}
+	void paramTarget::updateParamType(std::vector<char> paramTypeIdentifierIn)
+	{
+		paramTypeIdentifier = paramTypeIdentifier;
+		paramTypeIdentifierNum = lava::hexVecToNum(paramTypeIdentifier);
+	}
+	void paramTarget::updateParamValue(std::size_t paramValueNumIn)
+	{
+		paramValueNum = paramValueNumIn;
+		paramValueString = lava::numToHexStringWithPadding(paramValueNum, 8);
+		paramValue = lava::numToHexVec(paramValueNum);
+	}
+	void paramTarget::updateParamValue(std::string paramValueStringIn)
+	{
+		paramValueString = paramValueStringIn;
+		paramValueNum = lava::hexStringToNum(paramValueString);
+		paramValue = lava::numToHexVec(paramValueNum);
+	}
+	void paramTarget::updateParamValue(std::vector<char> paramValueIn)
+	{
+		paramValue = paramValueIn;
+		paramValueNum = lava::hexVecToNum(paramValue);
+		paramValueString = lava::numToHexStringWithPadding(paramValueNum, 8);
+	}
 
+	bool paramTarget::saveParamToContents()
+	{
+		bool result = 1;
+		result &= parentPtr->contents.setBytes(paramTypeIdentifier, paramOffsetNum + targetParamIndexOffset);
+		result &= parentPtr->contents.setBytes(paramValue, paramOffsetNum + targetParamIndexOffset + 4);
+		return result;
+	}
 }
 
 //std::ostream& operator<<(std::ostream& out, const std::vector<char>& in)

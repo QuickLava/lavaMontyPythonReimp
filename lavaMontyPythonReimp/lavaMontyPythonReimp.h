@@ -11,6 +11,7 @@
 #include <cctype>
 #include <algorithm>
 #include <iomanip>
+#include <map>
 #include "pugi/pugixml.hpp"
 
 namespace lava
@@ -36,9 +37,6 @@ namespace lava
 	constexpr float floatDenominator = 0xEA60;
 	const std::string changelogSuffix = "_changelog.txt";
 
-	/*std::vector<char> stringToVec(const std::string& stringIn);
-	std::string vecToString(const std::vector<char>& vecIn);*/
-
 	struct byteArray
 	{
 		std::size_t size = 0;
@@ -56,40 +54,81 @@ namespace lava
 		std::string name = "";
 		std::vector<char> signature = {};
 		int paramIndex = INT_MAX;
+		int paramType = INT_MAX;
 	};
-	enum movesetVarTypes
+	enum movesetParamTypes
 	{
 		varTy_INT = 0,
 		varTy_SCLR,
 		varTy_PNTR,
 		varTy_BOOL,
+		varTy_4,
+		varTy_VAR,
+		varTy_REQ,
 		variableTypeCount
 	};
 	enum modActionTypes
 	{
 		actTy_NULL = -1,
-		actTy_DO_NOTHING = 0,
+		// Simple Block
+		actTy_DO_NOTHING = 0x00,
 		actTy_REPLACE,
-		actTy_ADD,
-		actTy_SUB,
-		actTy_MUL,
-		actTy_DIV,
-		actTy_BIT_AND,
+		// A is for Arithmetic
+		actTy_INT_ADD = 0xA0,
+		actTy_INT_SUB,
+		actTy_INT_MUL,
+		actTy_INT_DIV, 
+		actTy_FLT_ADD,
+		actTy_FLT_SUB,
+		actTy_FLT_MUL,
+		actTy_FLT_DIV,
+		// B is for Bit Manipulation
+		actTy_BIT_AND = 0xB0,
 		actTy_BIT_OR,
 		actTy_BIT_XOR,
-		actTy_RETARGET_PARAM,
-		actionTypeCount
+		actTy_BIT_SHIFT_L,
+		actTy_BIT_SHIFT_R,
+		actTy_BIT_ROTATE_L,
+		actTy_BIT_ROTATE_R,
+		// C is for CAUTION
+		// You should't ever need to do this, use mod redirects isntead
+		actTy_RETARGET_PARAM = 0xC0,
+		actTy_CONVERT_PARAM,
+		//neo_actTy_SWAP_PARAMS,
 	};
+	enum matchEvaluationMethod
+	{
+		mtEvl_EQUALS = 0,
+		mtEvl_NOT_EQUALS,
+		mtEvl_GREATER,
+		mtEvl_GREATER_OE,
+		mtEvl_LESSER,
+		mtEvl_LESSER_OE,
+		mtEvl_BIT_AND,
+		mtEvl_BIT_XOR,
+		evaluationMethodCount
+	};
+
 	struct movesetPatchModAction
 	{
 		int actionType = modActionTypes::actTy_NULL;
 		std::string value = "";
 	};
+
+	enum extraConditionTypes
+	{
+		exCon_NULL = 0,
+		exCon_PREV_USED,
+		exCon_PREV_NOT_USED,
+		extraConditionTypeCount
+	};
 	struct movesetPatchMod
 	{
 		std::string match = "FFFFFFFF";
+		int matchMethod = matchEvaluationMethod::mtEvl_EQUALS;
 		std::string locked = "00000000";
-		int redirect = INT_MAX;
+		int paramIndexRedirect = INT_MAX;
+		int extraCondition = extraConditionTypes::exCon_NULL;
 		std::vector<movesetPatchModAction> actions;
 	};
 	struct movesetPatch
@@ -102,7 +141,7 @@ namespace lava
 	{
 		std::vector<std::vector<std::size_t>> timesTargetsHit;
 	};
-
+	
 	struct movesetFile
 	{
 	private:
@@ -124,12 +163,61 @@ namespace lava
 		bool init(std::string filePathIn);
 		std::string fetchString(std::size_t strAddr);
 		void summarizeTable(std::size_t tableAddr, std::size_t entryCount, std::size_t offsetShiftSize, std::string prefix = "\t\t", std::ostream& output = std::cout);
+		void summarizeOffsetSection(std::ostream& output = std::cout, std::size_t adjustment = 0x80);
+
 		std::vector<std::size_t> changeMatchingParameter(std::vector<std::pair<std::string, std::vector<char>>> functions, std::vector<std::pair<std::string, std::string>> matches, std::size_t parameterOffsetInBytes);
+
+		
 		movesetPatchResult applyMovesetPatch(const movesetPatch& patchIn);
-
-
 	};
 
+	struct paramTarget
+	{
+	private:
+		movesetFile* parentPtr = nullptr;
+
+		int targetParamIndex = 0;
+		std::size_t targetParamIndexOffset = SIZE_MAX;
+
+		std::vector<char> paramOffset = { 0, 0, 0, 0 };
+		std::size_t paramOffsetNum = SIZE_MAX;
+
+		std::vector<char> paramTypeIdentifier = { 0, 0, 0, 0 };
+		std::size_t paramTypeIdentifierNum = SIZE_MAX;
+
+		std::vector<char> paramValue = { 0, 0, 0, 0 };
+		std::size_t paramValueNum = SIZE_MAX;
+		std::string paramValueString = "00000000";
+
+	public:
+		paramTarget();
+		paramTarget(movesetFile& parent, std::size_t paramOffsetIn, int paramIndexIn);
+
+		int getParamIndex();
+		std::size_t getParamIndexOffset();
+
+		std::size_t getParamOffsetNum();
+		std::vector<char> getParamOffset();
+
+		std::size_t getParamTypeNum();
+		std::vector<char> getParamType();
+
+		std::size_t getParamValueNum();
+		std::string getParamValueString();
+		std::vector<char> getParamValue();
+
+		void updateParamOffset(std::size_t paramOffsetNumIn);
+		void updateParamOffset(std::vector<char> paramOffsetIn);
+
+		void updateParamType(std::size_t paramTypeIdentifierNumIn);
+		void updateParamType(std::vector<char> paramTypeIdentifierIn);
+
+		void updateParamValue(std::size_t paramValueNumIn);
+		void updateParamValue(std::string paramValueStringIn);
+		void updateParamValue(std::vector<char> paramValueIn);
+
+		bool saveParamToContents();
+	};
 }
 
 std::ostream& operator<<(std::ostream& out, const std::vector<char>& in);
