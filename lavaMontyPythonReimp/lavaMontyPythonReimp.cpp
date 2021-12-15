@@ -1244,8 +1244,8 @@ namespace lava
 										}
 										case modActionTypes::actTy_CONVERT_PARAM:
 										{
-											logOut << "[TARGET_PARAM]";
-											std::cout << "[TARGET_PARAM]";
+											logOut << "[CONVERT_PARAM]";
+											std::cout << "[CONVERT_PARAM]";
 											unsigned int incomingValNum = lava::hexStringToNum(currAction->value);
 											if (incomingValNum < lava::movesetParamTypes::variableTypeCount)
 											{
