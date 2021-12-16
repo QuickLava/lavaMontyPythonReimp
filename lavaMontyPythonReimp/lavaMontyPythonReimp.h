@@ -124,6 +124,7 @@ namespace lava
 	};
 	struct movesetPatchMod
 	{
+		std::string name = "";
 		std::string match = "FFFFFFFF";
 		int matchMethod = matchEvaluationMethod::mtEvl_EQUALS;
 		std::string locked = "00000000";

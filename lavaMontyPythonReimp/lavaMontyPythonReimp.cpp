@@ -241,12 +241,18 @@ namespace lava
 					}
 					else if (patchChild.name() == "modifications")
 					{
+						std::size_t modNumber = 0;
 						for (pugi::xml_node patchModification = patchChild.first_child(); patchModification; patchModification = patchModification.next_sibling())
 						{
 							movesetPatchMod currMod;
+							currMod.name = "Modification #" + std::to_string(modNumber);
 							for (pugi::xml_attribute patchModAttr = patchModification.first_attribute(); patchModAttr; patchModAttr = patchModAttr.next_attribute())
 							{
-								if (patchModAttr.name() == "match")
+								if (patchModAttr.name() == "name")
+								{
+									currMod.match = patchModAttr.as_string();
+								}
+								else if (patchModAttr.name() == "match")
 								{
 									currMod.match = lava::sanitizeHexStrInput(patchModAttr.as_string(), 1);
 								}
@@ -335,7 +341,105 @@ namespace lava
 								}
 								currMod.actions.push_back(currAction);
 							}
+							modNumber++;
 							currPatch.modifications.push_back(currMod);
+						}
+					}
+					else if (patchChild.name() == "directApply")
+					{
+						std::string baseName = "DirectApply";
+						unsigned int templateAction = lava::modActionTypes::actTy_REPLACE;
+						int templateRedirectParam = INT_MAX;
+						std::string templateLock = "00000000";
+						for (pugi::xml_attribute directApplyAttr = patchChild.first_attribute(); directApplyAttr; directApplyAttr = directApplyAttr.next_attribute())
+						{
+							if (directApplyAttr.name() == "name")
+							{
+								baseName = directApplyAttr.as_string();
+							}
+							else if (directApplyAttr.name() == "type")
+							{
+								std::string manipStr = directApplyAttr.as_string();
+								if (manipStr.find("0x") == 0)
+								{
+									manipStr = manipStr.substr(2, std::string::npos);
+									templateAction = std::stoi(manipStr, nullptr, 16);
+								}
+								else
+								{
+									templateAction = directApplyAttr.as_int(INT_MAX);
+									if (templateAction < 0)
+									{
+										templateAction = INT_MAX;
+									}
+								}
+							}
+							else if (directApplyAttr.name() == "paramIndexRedirect")
+							{
+								std::string manipStr = directApplyAttr.as_string();
+								if (manipStr.find("0x") == 0)
+								{
+									manipStr = manipStr.substr(2, std::string::npos);
+									templateRedirectParam = std::stoi(manipStr, nullptr, 16);
+								}
+								else
+								{
+									templateRedirectParam = directApplyAttr.as_int(INT_MAX);
+									if (templateRedirectParam < 0)
+									{
+										templateRedirectParam = INT_MAX;
+									}
+								}
+							}
+							else if (directApplyAttr.name() == "lock")
+							{
+								templateLock = lava::sanitizeHexStrInput(directApplyAttr.as_string(), 0);
+							}
+						}
+						if (templateAction != INT_MAX)
+						{
+							for (pugi::xml_node directApplyChild = patchChild.first_child(); directApplyChild; directApplyChild = directApplyChild.next_sibling())
+							{
+								if (directApplyChild.type() == pugi::xml_node_type::node_pcdata)
+								{
+									std::string commentChars = "#";
+									std::stringstream entryStream;
+									entryStream.str(directApplyChild.value());
+									std::string manipStr = "";
+									std::size_t entryNum = 0;
+									while (std::getline(entryStream, manipStr))
+									{
+										manipStr.erase(std::remove(manipStr.begin(), manipStr.end(), '\t'), manipStr.end());
+										manipStr.erase(std::remove(manipStr.begin(), manipStr.end(), ' '), manipStr.end());
+										if (manipStr.size())
+										{
+											std::size_t delimLoc = manipStr.find(',');
+											if (commentChars.find(manipStr[0]) == std::string::npos)
+											{
+												if (delimLoc != std::string::npos && delimLoc > 0 && delimLoc < (manipStr.size() - 1))
+												{
+													std::string match = manipStr.substr(0, delimLoc);
+													match = lava::sanitizeHexStrInput(match, 1);
+													std::string value = manipStr.substr(delimLoc + 1, std::string::npos);
+													value = lava::sanitizeHexStrInput(value, 0);
+
+													lava::movesetPatchMod tempMod;
+													tempMod.name = baseName + "[" + std::to_string(entryNum) + "]";
+													tempMod.locked = templateLock;
+													tempMod.match = match;
+													tempMod.paramIndexRedirect = templateRedirectParam;
+													lava::movesetPatchModAction tempAction;
+													tempAction.actionType = templateAction;
+													tempAction.value = value;
+													tempMod.actions.push_back(tempAction);
+													currPatch.modifications.push_back(tempMod);
+												}
+											}
+											entryNum++;
+										}
+									}
+								}
+							}
 						}
 					}
 				}
@@ -733,149 +837,164 @@ namespace lava
 					// Convert that offset to a size_t, and apply dataOffset (makes offset relative to beginning of .PAC file instead of beginning of moveset section
 					std::size_t paramOffsetNum = lava::hexVecToNum(paramOffset) + dataOffset;
 
-					// Create our param target. This holds the current value of the target parameter, as well as where it's stored in the file, and is the variable that we'll be modifying to make changes to the parameter's value and type.
-					lava::paramTarget neoParamVals(*this, paramOffsetNum, currTarget->paramIndex);
-
-					if (currTarget->paramType == INT_MAX || neoParamVals.getParamTypeNum() == currTarget->paramType)
+					// Determine whether or not that's actually a valid location or not, and if so, proceed.
+					if (paramOffsetNum < (dataOffset + dataLength))
 					{
-						// Report location of current ping, as well as its paramOffset. Note, the first paramOffset we report is non .pac adjusted since that's the one you'll see in PSAC, which is what I expect most people will be looking for. The adjusted value is provided second.
-						logOut << "\t[0x" << numToHexStringWithPadding(currPing, 8) << "]: Params @ 0x" << numToHexStringWithPadding(paramOffsetNum - dataOffset, 8);
-						std::cout << "\t[0x" << numToHexStringWithPadding(currPing, 8) << "]: Params @ 0x" << numToHexStringWithPadding(paramOffsetNum - dataOffset, 8);
+						// Create our param target. This holds the current value of the target parameter, as well as where it's stored in the file, and is the variable that we'll be modifying to make changes to the parameter's value and type.
+						lava::paramTarget neoParamVals(*this, paramOffsetNum, currTarget->paramIndex);
 
-						// Initialize values for loop
-						bool redirectUsed = 0;
-						bool previousModUsed = 0;
-						std::size_t modItr = 0;
-						bool matchFound = 0;
-						bool doScalarActionPrint = 0;
-						bool doScalarFinalPrint = 0;
-						const movesetPatchMod* currMod = nullptr;
-
-						logOut << ", Param Val: " << neoParamVals.getParamValue();
-						std::cout << ", Param Val: " << neoParamVals.getParamValue();
-						if (neoParamVals.getParamTypeNum() == lava::movesetParamTypes::varTy_SCLR)
+						// Process target paramType matching. If no type was specified, or if one was specified and it matches our found type, proceed.
+						if (currTarget->paramType == INT_MAX || neoParamVals.getParamTypeNum() == currTarget->paramType)
 						{
-							logOut << " (Scalar = " << neoParamVals.getParamValueNum() / lava::floatDenominator << ")";
-							std::cout << " (Scalar = " << neoParamVals.getParamValueNum() / lava::floatDenominator << ")";
-						}
-						logOut << "\n";
-						std::cout << "\n";
+							// Report location of current ping, as well as its paramOffset. Note, the first paramOffset we report is non .pac adjusted since that's the one you'll see in PSAC, which is what I expect most people will be looking for. The adjusted value is provided second.
+							logOut << "\t[0x" << numToHexStringWithPadding(currPing, 8) << "]: Params @ 0x" << numToHexStringWithPadding(paramOffsetNum - dataOffset, 8);
+							std::cout << "\t[0x" << numToHexStringWithPadding(currPing, 8) << "]: Params @ 0x" << numToHexStringWithPadding(paramOffsetNum - dataOffset, 8);
 
-						for (std::size_t modItr = 0; modItr < modificationCount; modItr++)
-						{
-							// Record pointer to current modification
-							currMod = &patchIn.modifications[modItr];
+							// Initialize values for loop
+							bool redirectUsed = 0;
+							bool previousModUsed = 0;
+							std::size_t modItr = 0;
+							bool matchFound = 0;
+							bool doScalarActionPrint = 0;
+							bool doScalarFinalPrint = 0;
+							const movesetPatchMod* currMod = nullptr;
 
-							// Handle redirect
-							if (currMod->paramIndexRedirect != INT_MAX)
+							// Do initial param val reporting
+							logOut << ", Param Val: " << neoParamVals.getParamValue();
+							std::cout << ", Param Val: " << neoParamVals.getParamValue();
+							if (neoParamVals.getParamTypeNum() == lava::movesetParamTypes::varTy_SCLR)
 							{
-								neoParamVals = lava::paramTarget(*this, paramOffsetNum, currMod->paramIndexRedirect);
-
-								redirectUsed = 1;
+								logOut << " (Scalar = " << neoParamVals.getParamValueNum() / lava::floatDenominator << ")";
+								std::cout << " (Scalar = " << neoParamVals.getParamValueNum() / lava::floatDenominator << ")";
 							}
-							else
+							logOut << "\n";
+							std::cout << "\n";
+
+							// Iterate through every modification
+							for (std::size_t modItr = 0; modItr < modificationCount; modItr++)
 							{
-								neoParamVals = lava::paramTarget(*this, paramOffsetNum, currTarget->paramIndex);
+								// Record pointer to current modification
+								currMod = &patchIn.modifications[modItr];
 
-								redirectUsed = 0;
-							}
-
-							bool matchEvalRes = 0;
-							std::string tempEvalStr = currMod->match;
-							for (std::size_t i = 0; i < tempEvalStr.size(); i++)
-							{
-								if (tempEvalStr[i] == 'X')
+								// Handle param redirects
+								// If a redirect index was specified...
+								if (currMod->paramIndexRedirect != INT_MAX)
 								{
-									tempEvalStr[i] = neoParamVals.getParamValueString()[i];
+									//... reinitialize the param bundle to point to the new param.
+									neoParamVals = lava::paramTarget(*this, paramOffsetNum, currMod->paramIndexRedirect);
+									// Record that the redirect happened (used for reporting later).
+									redirectUsed = 1;
 								}
-							}
-							switch (currMod->matchMethod)
-							{
-								case lava::matchEvaluationMethod::mtEvl_EQUALS:
+								// Otherwise...
+								else
 								{
-									matchEvalRes = hexStrComp(tempEvalStr, neoParamVals.getParamValueString());
-									break;
-								}
-								case lava::matchEvaluationMethod::mtEvl_NOT_EQUALS:
-								{
-									matchEvalRes = !hexStrComp(tempEvalStr, neoParamVals.getParamValueString());
-									break;
-								}
-								case lava::matchEvaluationMethod::mtEvl_GREATER:
-								{
-									matchEvalRes = lava::hexStringToNum(tempEvalStr) > neoParamVals.getParamValueNum();
-									break;
-								}
-								case lava::matchEvaluationMethod::mtEvl_GREATER_OE:
-								{
-									matchEvalRes = lava::hexStringToNum(tempEvalStr) >= neoParamVals.getParamValueNum();
-									break;
-								}
-								case lava::matchEvaluationMethod::mtEvl_LESSER:
-								{
-									matchEvalRes = lava::hexStringToNum(tempEvalStr) < neoParamVals.getParamValueNum();
-									break;
-								}
-								case lava::matchEvaluationMethod::mtEvl_LESSER_OE:
-								{
-									matchEvalRes = lava::hexStringToNum(tempEvalStr) <= neoParamVals.getParamValueNum();
-									break;
-								}
-								case lava::matchEvaluationMethod::mtEvl_BIT_AND:
-								{
-									matchEvalRes = lava::hexStringToNum(tempEvalStr) & neoParamVals.getParamValueNum();
-									break;
-								}
-								case lava::matchEvaluationMethod::mtEvl_BIT_XOR:
-								{
-									matchEvalRes = lava::hexStringToNum(tempEvalStr) ^ neoParamVals.getParamValueNum();
-									break;
-								}
-								default:
-								{
-									matchEvalRes = 0;
-									break;
-								}
-							}
-
-							bool extraConditionRes = 0;
-							switch (currMod->extraCondition)
-							{
-								case lava::extraConditionTypes::exCon_PREV_USED:
-								{
-									extraConditionRes = previousModUsed;
-									break;
-								}
-								case lava::extraConditionTypes::exCon_PREV_NOT_USED:
-								{
-									extraConditionRes = !previousModUsed;
-									break;
-								}
-								default:
-								{
-									extraConditionRes = 1;
-									break;
-								}
-							}
-
-							// If the current mod's match value matches the paramValue string
-							if (matchEvalRes && extraConditionRes)
-							{
-								// Record that the modification was used and report it to the console.
-								matchFound = 1;
-								previousModUsed = 1;
-								results.timesTargetsHit[targetItr][modItr]++;
-
-								logOut << "\t\tModification #" << modItr << ":\n";
-								std::cout << "\t\tModification #" << modItr << ":\n";
-								if (redirectUsed)
-								{
-									logOut << "\t\t(Redirect Triggered, New Target Index is " << currMod->paramIndexRedirect << ")\n";
-									std::cout << "\t\t(Redirect Triggered, New Target Index is " << currMod->paramIndexRedirect << ")\n";
+									//... ensure we're on the parameter originally specified by the target.
+									neoParamVals = lava::paramTarget(*this, paramOffsetNum, currTarget->paramIndex);
+									// Record that no redirect happened.
+									redirectUsed = 0;
 								}
 
-								if (1 || currMod->matchMethod)
+								// Initiate match evaluation result variable
+								bool matchEvalRes = 0;
+								// Build the version of the match string we'll be using. This just replaces any passthrough chars ('X's) with the digit in the corresponding slot of the target param, ensuring they're equal.
+								std::string tempEvalStr = currMod->match;
+								for (std::size_t i = 0; i < tempEvalStr.size(); i++)
 								{
+									if (tempEvalStr[i] == 'X')
+									{
+										tempEvalStr[i] = neoParamVals.getParamValueString()[i];
+									}
+								}
+								// Actually evaluate the various methods.
+								switch (currMod->matchMethod)
+								{
+									case lava::matchEvaluationMethod::mtEvl_EQUALS:
+									{
+										matchEvalRes = hexStrComp(tempEvalStr, neoParamVals.getParamValueString());
+										break;
+									}
+									case lava::matchEvaluationMethod::mtEvl_NOT_EQUALS:
+									{
+										matchEvalRes = !hexStrComp(tempEvalStr, neoParamVals.getParamValueString());
+										break;
+									}
+									case lava::matchEvaluationMethod::mtEvl_GREATER:
+									{
+										matchEvalRes = lava::hexStringToNum(tempEvalStr) > neoParamVals.getParamValueNum();
+										break;
+									}
+									case lava::matchEvaluationMethod::mtEvl_GREATER_OE:
+									{
+										matchEvalRes = lava::hexStringToNum(tempEvalStr) >= neoParamVals.getParamValueNum();
+										break;
+									}
+									case lava::matchEvaluationMethod::mtEvl_LESSER:
+									{
+										matchEvalRes = lava::hexStringToNum(tempEvalStr) < neoParamVals.getParamValueNum();
+										break;
+									}
+									case lava::matchEvaluationMethod::mtEvl_LESSER_OE:
+									{
+										matchEvalRes = lava::hexStringToNum(tempEvalStr) <= neoParamVals.getParamValueNum();
+										break;
+									}
+									case lava::matchEvaluationMethod::mtEvl_BIT_AND:
+									{
+										matchEvalRes = lava::hexStringToNum(tempEvalStr) & neoParamVals.getParamValueNum();
+										break;
+									}
+									case lava::matchEvaluationMethod::mtEvl_BIT_XOR:
+									{
+										matchEvalRes = lava::hexStringToNum(tempEvalStr) ^ neoParamVals.getParamValueNum();
+										break;
+									}
+									default:
+									{
+										matchEvalRes = 0;
+										break;
+									}
+								}
+
+								// Initiate extra condition evaluation result variable
+								bool extraConditionRes = 0;
+								// Evaluate status of specified condition.
+								switch (currMod->extraCondition)
+								{
+									case lava::extraConditionTypes::exCon_PREV_USED:
+									{
+										extraConditionRes = previousModUsed;
+										break;
+									}
+									case lava::extraConditionTypes::exCon_PREV_NOT_USED:
+									{
+										extraConditionRes = !previousModUsed;
+										break;
+									}
+									default:
+									{
+										extraConditionRes = 1;
+										break;
+									}
+								}
+
+								// If both the match and extra condition evaluated to true, continue with applying any actions.
+								if (matchEvalRes && extraConditionRes)
+								{
+									// Record that the modification was used and report it to the console.
+									matchFound = 1;
+									previousModUsed = 1;
+									results.timesTargetsHit[targetItr][modItr]++;
+
+									// Do logging
+									logOut << "\t\t\"" << currMod->name << "\":\n";
+									std::cout << "\t\t\"" << currMod->name << "\":\n";
+									// Redirect info is only printed if relevant
+									if (redirectUsed)
+									{
+										logOut << "\t\t(Redirect Triggered, New Target Index is " << currMod->paramIndexRedirect << ")\n";
+										std::cout << "\t\t(Redirect Triggered, New Target Index is " << currMod->paramIndexRedirect << ")\n";
+									}
+									// Print info on the match method
 									logOut << "\t\tFound match (Match:" << currMod->match << " ";
 									std::cout << "\t\tFound match (Match:" << currMod->match << " ";
 									switch (currMod->matchMethod)
@@ -935,61 +1054,55 @@ namespace lava
 									}
 									logOut << " Param Value:" << neoParamVals.getParamValueString() << ")\n";
 									std::cout << " Param Value:" << neoParamVals.getParamValueString() << ")\n";
-								}
-								else
-								{
-									logOut << "\t\tFound match (Pattern: " << currMod->match << ", Param Value: " << neoParamVals.getParamValueString() << ")\n";
-									std::cout << "\t\tFound match (Pattern: " << currMod->match << ", Param Value: " << neoParamVals.getParamValueString() << ")\n";
-								}
-
-								if (currMod->extraCondition)
-								{
-									std::cout << "\t\tExtra Condition also met:";
-									logOut << "\t\tExtra Condition also met:";
-									switch (currMod->extraCondition)
+									// Extra condition info is also only printed if relevant
+									if (currMod->extraCondition)
 									{
-									case lava::extraConditionTypes::exCon_PREV_USED:
-									{
-										std::cout << " [REQ_PREV]\n";
-										logOut << " [REQ_PREV]\n";
-										break;
+										std::cout << "\t\tExtra Condition also met:";
+										logOut << "\t\tExtra Condition also met:";
+										switch (currMod->extraCondition)
+										{
+										case lava::extraConditionTypes::exCon_PREV_USED:
+										{
+											std::cout << " [REQ_PREV]\n";
+											logOut << " [REQ_PREV]\n";
+											break;
+										}
+										case lava::extraConditionTypes::exCon_PREV_NOT_USED:
+										{
+											std::cout << " [REQ_NOT_PREV]\n";
+											logOut << " [REQ_NOT_PREV]\n";
+											break;
+										}
+										default:
+										{
+											break;
+										}
+										}
 									}
-									case lava::extraConditionTypes::exCon_PREV_NOT_USED:
-									{
-										std::cout << " [REQ_NOT_PREV]\n";
-										logOut << " [REQ_NOT_PREV]\n";
-										break;
-									}
-									default:
-									{
-										break;
-									}
-									}
-								}
 
-								// Initialize variables for use in loop
-								const movesetPatchModAction* currAction = nullptr;
-								const std::string canonParamValString = neoParamVals.getParamValueString();
-								std::string intermediateParamValString = neoParamVals.getParamValueString();
-								bool actionOccured = 0;
+									// Initialize variables for use in loop
+									const movesetPatchModAction* currAction = nullptr;
+									const std::string canonParamValString = neoParamVals.getParamValueString();
+									std::string intermediateParamValString = neoParamVals.getParamValueString();
+									bool actionOccured = 0;
 
-								// Iterate through each action:
-								for (std::size_t actionItr = 0; actionItr < currMod->actions.size(); actionItr++)
-								{
-									// Store intermediate paramString
-									intermediateParamValString = neoParamVals.getParamValueString();
-									// Reset action tracker
-									actionOccured = 0;
-									doScalarActionPrint = 0;
-									doScalarFinalPrint = 0;
-
-									// Do changelog reporting
-									logOut << "\t\t\tAction #" << actionItr << ": ";
-									std::cout << "\t\t\tAction #" << actionItr << ": ";
-									currAction = &currMod->actions[actionItr];
-									// Perform the appropriate changes based on the type of action
-									switch (currAction->actionType)
+									// Iterate through each action:
+									for (std::size_t actionItr = 0; actionItr < currMod->actions.size(); actionItr++)
 									{
+										// Store intermediate paramString
+										intermediateParamValString = neoParamVals.getParamValueString();
+										// Reset action tracker
+										actionOccured = 0;
+										doScalarActionPrint = 0;
+										doScalarFinalPrint = 0;
+
+										// Do changelog reporting
+										logOut << "\t\t\tAction #" << actionItr << ": ";
+										std::cout << "\t\t\tAction #" << actionItr << ": ";
+										currAction = &currMod->actions[actionItr];
+										// Perform the appropriate changes based on the type of action
+										switch (currAction->actionType)
+										{
 										case modActionTypes::actTy_DO_NOTHING:
 										{
 											logOut << "[NOP]";
@@ -1243,51 +1356,51 @@ namespace lava
 											{
 												switch (incomingValNum)
 												{
-													case lava::movesetParamTypes::varTy_INT:
+												case lava::movesetParamTypes::varTy_INT:
+												{
+													if (neoParamVals.getParamTypeNum() == lava::movesetParamTypes::varTy_SCLR)
 													{
-														if (neoParamVals.getParamTypeNum() == lava::movesetParamTypes::varTy_SCLR)
-														{
-															unsigned int manipNum = neoParamVals.getParamValueNum();
-															manipNum /= lava::floatDenominator;
-															neoParamVals.updateParamValue(manipNum);
-														}
-														break;
+														unsigned int manipNum = neoParamVals.getParamValueNum();
+														manipNum /= lava::floatDenominator;
+														neoParamVals.updateParamValue(manipNum);
 													}
-													case lava::movesetParamTypes::varTy_SCLR:
+													break;
+												}
+												case lava::movesetParamTypes::varTy_SCLR:
+												{
+													doScalarActionPrint = 1;
+													if (neoParamVals.getParamTypeNum() == lava::movesetParamTypes::varTy_INT)
 													{
-														doScalarActionPrint = 1;
-														if (neoParamVals.getParamTypeNum() == lava::movesetParamTypes::varTy_INT)
-														{
-															unsigned int manipNum = neoParamVals.getParamValueNum();
-															manipNum *= lava::floatDenominator;
-															neoParamVals.updateParamValue(manipNum);
-														}
-														break;
+														unsigned int manipNum = neoParamVals.getParamValueNum();
+														manipNum *= lava::floatDenominator;
+														neoParamVals.updateParamValue(manipNum);
 													}
-													case lava::movesetParamTypes::varTy_PNTR:
-													{
-														break;
-													}
-													case lava::movesetParamTypes::varTy_BOOL:
-													{
-														break;
-													}
-													case lava::movesetParamTypes::varTy_4:
-													{
-														break;
-													}
-													case lava::movesetParamTypes::varTy_VAR:
-													{
-														break;
-													}
-													case lava::movesetParamTypes::varTy_REQ:
-													{
-														break;
-													}
-													default:
-													{
-														break;
-													}
+													break;
+												}
+												case lava::movesetParamTypes::varTy_PNTR:
+												{
+													break;
+												}
+												case lava::movesetParamTypes::varTy_BOOL:
+												{
+													break;
+												}
+												case lava::movesetParamTypes::varTy_4:
+												{
+													break;
+												}
+												case lava::movesetParamTypes::varTy_VAR:
+												{
+													break;
+												}
+												case lava::movesetParamTypes::varTy_REQ:
+												{
+													break;
+												}
+												default:
+												{
+													break;
+												}
 												}
 												neoParamVals.updateParamType(incomingValNum);
 											}
@@ -1303,76 +1416,80 @@ namespace lava
 											std::cout << "[INVALID_TYPE]";
 											break;
 										}
-									}
+										}
 
-									if (actionOccured)
-									{
-										if (neoParamVals.getParamTypeNum() == lava::movesetParamTypes::varTy_SCLR || doScalarActionPrint)
+										if (actionOccured)
 										{
-											logOut << " Value = " << currAction->value;
-											std::cout << " Value = " << currAction->value;
-											float incomingFlt = hexStringToNum(currAction->value) / lava::floatDenominator;
-											logOut << " (Scalar = " << incomingFlt << ")";
-											std::cout << " (Scalar = " << incomingFlt << ")";
-											float intermediateFlt = lava::hexStringToNum(intermediateParamValString) / lava::floatDenominator;
-											logOut << "\n\t\t\t\t" << intermediateParamValString << " (" << intermediateFlt << ") -> " << neoParamVals.getParamValueString() << " (" << neoParamVals.getParamValueNum() / lava::floatDenominator << ")\n";
-											std::cout << "\n\t\t\t\t" << intermediateParamValString << " (" << intermediateFlt << ") -> " << neoParamVals.getParamValueString() << " (" << neoParamVals.getParamValueNum() / lava::floatDenominator << ")\n";
+											if (neoParamVals.getParamTypeNum() == lava::movesetParamTypes::varTy_SCLR || doScalarActionPrint)
+											{
+												logOut << " Value = " << currAction->value;
+												std::cout << " Value = " << currAction->value;
+												float incomingFlt = hexStringToNum(currAction->value) / lava::floatDenominator;
+												logOut << " (Scalar = " << incomingFlt << ")";
+												std::cout << " (Scalar = " << incomingFlt << ")";
+												float intermediateFlt = lava::hexStringToNum(intermediateParamValString) / lava::floatDenominator;
+												logOut << "\n\t\t\t\t" << intermediateParamValString << " (" << intermediateFlt << ") -> " << neoParamVals.getParamValueString() << " (" << neoParamVals.getParamValueNum() / lava::floatDenominator << ")\n";
+												std::cout << "\n\t\t\t\t" << intermediateParamValString << " (" << intermediateFlt << ") -> " << neoParamVals.getParamValueString() << " (" << neoParamVals.getParamValueNum() / lava::floatDenominator << ")\n";
+											}
+											else
+											{
+												logOut << " Value = " << currAction->value << "\n\t\t\t\t" << intermediateParamValString << " -> " << neoParamVals.getParamValueString() << "\n";
+												std::cout << " Value = " << currAction->value << "\n\t\t\t\t" << intermediateParamValString << " -> " << neoParamVals.getParamValueString() << "\n";
+											}
 										}
 										else
 										{
-											logOut << " Value = " << currAction->value << "\n\t\t\t\t" << intermediateParamValString << " -> " << neoParamVals.getParamValueString() << "\n";
-											std::cout << " Value = " << currAction->value << "\n\t\t\t\t" << intermediateParamValString << " -> " << neoParamVals.getParamValueString() << "\n";
+											std::cout << "\n";
+											logOut << "\n";
 										}
 									}
-									else
+
+									// Handle lock
+									bool lockUsed = 0;
+									for (std::size_t i = 0; i < 8; i++)
 									{
-										std::cout << "\n";
-										logOut << "\n";
+										std::string lockApplicationStr = neoParamVals.getParamValueString();
+										if (currMod->locked[i] == '1' && lockApplicationStr[i] != canonParamValString[i])
+										{
+											lockApplicationStr[i] = canonParamValString[i];
+											lockUsed = 1;
+										}
+										neoParamVals.updateParamValue(lockApplicationStr);
 									}
-								}
-
-								// Handle lock
-								bool lockUsed = 0;
-								for (std::size_t i = 0; i < 8; i++)
-								{
-									std::string lockApplicationStr = neoParamVals.getParamValueString();
-									if (currMod->locked[i] == '1' && lockApplicationStr[i] != canonParamValString[i])
+									// Only print the result of the lock operation if the value changed as a result of applying it.
+									if (lockUsed)
 									{
-										lockApplicationStr[i] = canonParamValString[i];
-										lockUsed = 1;
+										std::cout << "\t\t\tLock (" << currMod->locked << "): " << neoParamVals.getParamValueString() << "\n";
+										logOut << "\t\t\tLock (" << currMod->locked << "): " << neoParamVals.getParamValueString() << "\n";
 									}
-									neoParamVals.updateParamValue(lockApplicationStr);
-								}
-								if (lockUsed)
-								{
-									std::cout << "\t\t\tLock (" << currMod->locked << "): " << neoParamVals.getParamValueString() << "\n";
-									logOut << "\t\t\tLock (" << currMod->locked << "): " << neoParamVals.getParamValueString() << "\n";
-								}
 
-								// Write result to contents.
-								neoParamVals.saveParamToContents();
+									// Write result to contents.
+									neoParamVals.saveParamToContents();
 
-								// Report results:
-								logOut << "\t\t\tFinal Value: " << contents.getBytes(4, neoParamVals.getParamOffsetNum() + neoParamVals.getParamIndexOffset() + 4, numGotten);
-								std::cout << "\t\t\tFinal Value: " << contents.getBytes(4, neoParamVals.getParamOffsetNum() + neoParamVals.getParamIndexOffset() + 4, numGotten);
-								// Do scalar report if necessary
-								if (neoParamVals.getParamTypeNum() == lava::movesetParamTypes::varTy_SCLR || doScalarFinalPrint)
-								{
-									logOut << " (Scalar = " << neoParamVals.getParamValueNum() / lava::floatDenominator << ")";
-									std::cout << " (Scalar = " << neoParamVals.getParamValueNum() / lava::floatDenominator << ")";
+									// Report results:
+									logOut << "\t\t\tFinal Value: " << contents.getBytes(4, neoParamVals.getParamOffsetNum() + neoParamVals.getParamIndexOffset() + 4, numGotten);
+									std::cout << "\t\t\tFinal Value: " << contents.getBytes(4, neoParamVals.getParamOffsetNum() + neoParamVals.getParamIndexOffset() + 4, numGotten);
+									// Do scalar report if necessary
+									if (neoParamVals.getParamTypeNum() == lava::movesetParamTypes::varTy_SCLR || doScalarFinalPrint)
+									{
+										logOut << " (Scalar = " << neoParamVals.getParamValueNum() / lava::floatDenominator << ")";
+										std::cout << " (Scalar = " << neoParamVals.getParamValueNum() / lava::floatDenominator << ")";
+									}
+									logOut << "\n";
+									std::cout << "\n";
 								}
+								else
+								{
+									previousModUsed = 0;
+								}
+							}
+
+							// Prints a new line if no matches were reported, just keeps logs pretty
+							if (!matchFound)
+							{
 								logOut << "\n";
 								std::cout << "\n";
 							}
-							else
-							{
-								previousModUsed = 0;
-							}
-						}
-						if (!matchFound)
-						{
-							logOut << "\n";
-							std::cout << "\n";
 						}
 					}
 				}
@@ -1393,8 +1510,8 @@ namespace lava
 			std::cout << "\t\"" << patchIn.targets[i].name << "\":\n";
 			for (std::size_t modItr = 0; modItr < modificationCount; modItr++)
 			{
-				logOut << "\t\tModification #" << numToDecStringWithPadding(modItr, 2);
-				std::cout << "\t\tModification #" << numToDecStringWithPadding(modItr, 2);
+				logOut << "\t\t\"" << patchIn.modifications[modItr].name << "\"";
+				std::cout << "\t\t\"" << patchIn.modifications[modItr].name << "\"";
 				std::size_t appliedCount = results.timesTargetsHit[i][modItr];
 				if (appliedCount == 0)
 				{
