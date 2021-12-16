@@ -1000,15 +1000,7 @@ namespace lava
 										{
 											actionOccured = 1;
 
-											std::string manipStr = neoParamVals.getParamValueString();
-											for (std::size_t i = 0; i < canonParamLengthStr; i++)
-											{
-												if (currAction->value[i] != 'X')
-												{
-													manipStr[i] = currAction->value[i];
-												}
-											}
-											neoParamVals.updateParamValue(manipStr);
+											neoParamVals.updateParamValue(currAction->value);
 
 											logOut << "[REP]";
 											std::cout << "[REP]";
