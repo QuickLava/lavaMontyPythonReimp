@@ -6,3 +6,4 @@ lavaMontyPythonReimp/Release/**
 lavaMontyPythonReimp/*.pac
 lavaMontyPythonReimp/Junk/**
 lavaMontyPythonReimp/*.txt
+!lavaMontyPythonReimp/patches.txt

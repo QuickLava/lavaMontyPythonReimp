@@ -1,0 +1,3 @@
+"./_TestPatches/IntParamManipTest.xml"
+"./_TestPatches/FloatParamManipTest.xml"
+"./_TestPatches/BitManipTest.xml"
