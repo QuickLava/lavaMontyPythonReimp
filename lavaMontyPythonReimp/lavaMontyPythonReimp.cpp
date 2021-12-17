@@ -2,6 +2,8 @@
 
 namespace lava
 {
+	std::ofstream changelogStream = std::ofstream();
+
 	std::string stringToUpper(const std::string& stringIn)
 	{
 		std::string result = stringIn;
@@ -179,6 +181,7 @@ namespace lava
 			for (pugi::xml_node patch = patchXMLIn.first_child(); patch; patch = patch.next_sibling())
 			{
 				movesetPatch currPatch;
+				currPatch.sourceFile = fileIn;
 				for (pugi::xml_attribute patchAttr = patch.first_attribute(); patchAttr; patchAttr = patchAttr.next_attribute())
 				{
 					if (patchAttr.name() == "name")
@@ -571,7 +574,7 @@ namespace lava
 		return result;
 	}
 
-	bool movesetFile::init(std::string filePathIn)
+	bool movesetFile::init(std::string filePathIn, std::ostream& logStream)
 	{
 		std::ifstream input;
 		input.open(filePathIn, std::ios_base::binary | std::ios_base::in);
@@ -604,17 +607,15 @@ namespace lava
 				std::cout << "\tExternal Data Table Contents:\n";
 				summarizeTable(externalDataOffset, externalDataCount, 0x0, "\t\t");
 
-				std::ofstream logOut;
-				logOut.open(filePathIn.substr(0, filePathIn.rfind('.')) + changelogSuffix, std::ios_base::app);
-				if (logOut.is_open())
+				if (logStream.good())
 				{
-					logOut << "Header Info:\n" << std::hex;
-					logOut << "\tMoveset Section[0x80]: Total Length = 0x" << movesetLength << ", Data Length = 0x" << dataLength << "\n";
-					logOut << "\tOffset Section[0x" << offsetSectionOffset << "]: Entry Count = 0x" << offsetSectionCount << "\n";
-					logOut << "\tData Table Section[0x" << dataTableOffset << "]: Entry Count = 0x" << dataTableCount << "\n";
-					logOut << "\tExternal Data Table Section[0x" << externalDataOffset << "]: Entry Count = 0x" << externalDataCount << "\n";
-					logOut << "\tTables End[0x" << tablesEnd << "]";
-					logOut << "\n\n" << std::dec;
+					logStream << "Header Info:\n" << std::hex;
+					logStream << "\tMoveset Section[0x80]: Total Length = 0x" << movesetLength << ", Data Length = 0x" << dataLength << "\n";
+					logStream << "\tOffset Section[0x" << offsetSectionOffset << "]: Entry Count = 0x" << offsetSectionCount << "\n";
+					logStream << "\tData Table Section[0x" << dataTableOffset << "]: Entry Count = 0x" << dataTableCount << "\n";
+					logStream << "\tExternal Data Table Section[0x" << externalDataOffset << "]: Entry Count = 0x" << externalDataCount << "\n";
+					logStream << "\tTables End[0x" << tablesEnd << "]";
+					logStream << "\n\n" << std::dec;
 				}
 			}
 		}
@@ -707,12 +708,12 @@ namespace lava
 		std::vector<char> paramOffset = {};
 		std::size_t paramOffsetNum = 0;
 		std::vector<char> paramVal = {};
-		std::ofstream logOut;
-		logOut.open(filePath.substr(0, filePath.rfind('.')) + changelogSuffix, std::ios_base::app);
+		std::ofstream logStream;
+		logStream.open(filePath.substr(0, filePath.rfind('.')) + changelogSuffix, std::ios_base::app);
 		for (std::size_t i = 0; i < funcCount; i++)
 		{
 			currFunc = &functions[i];
-			logOut << currFunc->first << " Param Changes:\n";
+			logStream << currFunc->first << " Param Changes:\n";
 			std::cout << "Processing Function \"" << currFunc->first << "\":\n";
 			searchPings = contents.searchMultiple(currFunc->second, 0, movesetLength + 0x60 - currFunc->second.size());
 			pingCount = searchPings.size();
@@ -737,7 +738,7 @@ namespace lava
 						if (hexStrComp(matchPtr->first, paramValStr))
 						{
 							matchResults[y]++;
-							logOut << "\t[0x" << std::hex << lava::numToHexStringWithPadding(searchPings[u], 8) << std::dec << "->0x" << paramOffset << "]: Changed Param from 0x" << paramValStr << " to 0x";
+							logStream << "\t[0x" << std::hex << lava::numToHexStringWithPadding(searchPings[u], 8) << std::dec << "->0x" << paramOffset << "]: Changed Param from 0x" << paramValStr << " to 0x";
 							std::cout << "\t\tFOUND MATCH! ";
 							matchFound = 1;
 							for (std::size_t t = 0; t < canonParamLengthStr; t++)
@@ -748,7 +749,7 @@ namespace lava
 								}
 							}
 							contents.setBytes(numToHexVec(hexStringToNum(paramValStr)), paramOffsetNum + parameterOffsetInBytes);
-							logOut << contents.getBytes(canonParamLengthInBytes, paramOffsetNum + parameterOffsetInBytes, numGotten) << "\n";
+							logStream << contents.getBytes(canonParamLengthInBytes, paramOffsetNum + parameterOffsetInBytes, numGotten) << "\n";
 							std::cout << "Param Transformed to: " << contents.getBytes(canonParamLengthInBytes, paramOffsetNum + parameterOffsetInBytes, numGotten) << "\n";
 							affected++;
 						}
@@ -769,27 +770,27 @@ namespace lava
 		}
 
 		std::cout << "Match summary:\n";
-		logOut << "Match summary:\n";
+		logStream << "Match summary:\n";
 		for (std::size_t i = 0; i < matchesCount; i++)
 		{
 			if (matchResults[i] == 0)
 			{
 				std::cout << "\tMatch #" << numToDecStringWithPadding(i, 3) << " (" << matches[i].first << " -> " << matches[i].second << ") was never used.\n";
-				logOut << "\tMatch #" << numToDecStringWithPadding(i, 3) << " (" << matches[i].first << " -> " << matches[i].second <<") was never used.\n";
+				logStream << "\tMatch #" << numToDecStringWithPadding(i, 3) << " (" << matches[i].first << " -> " << matches[i].second <<") was never used.\n";
 			}
 			else
 			{
 				std::cout << "\tMatch #" << numToDecStringWithPadding(i, 3) << " (" << matches[i].first << " -> " << matches[i].second << ") used " << matchResults[i] << " time(s).\n";
-				logOut << "\tMatch #" << numToDecStringWithPadding(i, 3) << " (" << matches[i].first << " -> " << matches[i].second << ") used " << matchResults[i] << " time(s).\n";
+				logStream << "\tMatch #" << numToDecStringWithPadding(i, 3) << " (" << matches[i].first << " -> " << matches[i].second << ") used " << matchResults[i] << " time(s).\n";
 			}
 		}
 		std::cout << "\n";
-		logOut << "\n";
+		logStream << "\n";
 
 		return matchResults;
 	}
 
-	lava::movesetPatchResult movesetFile::applyMovesetPatch(const lava::movesetPatch& patchIn)
+	lava::movesetPatchResult movesetFile::applyMovesetPatch(const lava::movesetPatch& patchIn, std::ostream& logStream)
 	{
 		// Initialize results struct
 		lava::movesetPatchResult results;
@@ -798,15 +799,12 @@ namespace lava
 		std::size_t modificationCount = patchIn.modifications.size();
 		// Resize result list
 		results.timesTargetsHit.resize(targetCount, std::vector<std::size_t>(modificationCount, 0));
-		// Initialize changelog output
-		std::ofstream logOut;
-		logOut.open(filePath.substr(0, filePath.rfind('.')) + changelogSuffix, std::ios_base::app);
-
+		
 		// Format float precision for output streams
 		std::cout << std::fixed;
 		std::cout << std::setprecision(3);
-		logOut << std::fixed;
-		logOut << std::setprecision(3);
+		logStream << std::fixed;
+		logStream << std::setprecision(3);
 
 		// Initialize variables for reuse in the loop
 		std::size_t numGotten = 0;
@@ -818,14 +816,14 @@ namespace lava
 			// Grab pointer to current target, and ping for its signature within the data section
 			const movesetPatchTarget* currTarget = &patchIn.targets[targetItr];
 			std::cout << "\"" << currTarget->name << "\" [0x" << currTarget->signature << "] (Param " << currTarget->paramIndex;
-			logOut << "\"" << currTarget->name << "\" [0x" << currTarget->signature << "] (Param " << currTarget->paramIndex;
+			logStream << "\"" << currTarget->name << "\" [0x" << currTarget->signature << "] (Param " << currTarget->paramIndex;
 			if (currTarget->paramType != INT_MAX)
 			{
 				std::cout << ", of Type " << currTarget->paramType;
-				logOut << ", of Type " << currTarget->paramType;
+				logStream << ", of Type " << currTarget->paramType;
 			}
 			std::cout << "):\n";
-			logOut << "):\n";
+			logStream << "):\n";
 			
 			searchPings = contents.searchMultiple(currTarget->signature, dataOffset, dataOffset + dataLength);
 
@@ -850,7 +848,7 @@ namespace lava
 						if (currTarget->paramType == INT_MAX || currParamVals.getParamTypeNum() == currTarget->paramType)
 						{
 							// Report location of current ping, as well as its paramOffset. Note, the first paramOffset we report is non .pac adjusted since that's the one you'll see in PSAC, which is what I expect most people will be looking for. The adjusted value is provided second.
-							logOut << "\t[0x" << numToHexStringWithPadding(currPing, 8) << "]: Params @ 0x" << numToHexStringWithPadding(paramOffsetNum - dataOffset, 8);
+							logStream << "\t[0x" << numToHexStringWithPadding(currPing, 8) << "]: Params @ 0x" << numToHexStringWithPadding(paramOffsetNum - dataOffset, 8);
 							std::cout << "\t[0x" << numToHexStringWithPadding(currPing, 8) << "]: Params @ 0x" << numToHexStringWithPadding(paramOffsetNum - dataOffset, 8);
 
 							// Initialize values for loop
@@ -863,14 +861,14 @@ namespace lava
 							const movesetPatchMod* currMod = nullptr;
 
 							// Do initial param val reporting
-							logOut << ", Param Val: " << currParamVals.getParamValue();
+							logStream << ", Param Val: " << currParamVals.getParamValue();
 							std::cout << ", Param Val: " << currParamVals.getParamValue();
 							if (currParamVals.getParamTypeNum() == lava::movesetParamTypes::varTy_SCLR)
 							{
-								logOut << " (Scalar = " << currParamVals.getParamValueNum() / lava::floatDenominator << ")";
+								logStream << " (Scalar = " << currParamVals.getParamValueNum() / lava::floatDenominator << ")";
 								std::cout << " (Scalar = " << currParamVals.getParamValueNum() / lava::floatDenominator << ")";
 							}
-							logOut << "\n";
+							logStream << "\n";
 							std::cout << "\n";
 
 							// Iterate through every modification
@@ -989,65 +987,65 @@ namespace lava
 									results.timesTargetsHit[targetItr][modItr]++;
 
 									// Do logging
-									logOut << "\t\t\"" << currMod->name << "\":\n";
+									logStream << "\t\t\"" << currMod->name << "\":\n";
 									std::cout << "\t\t\"" << currMod->name << "\":\n";
 									// Redirect info is only printed if relevant
 									if (redirectUsed)
 									{
-										logOut << "\t\t(Redirect Triggered, New Target Index is " << currMod->paramIndexRedirect << ")\n";
+										logStream << "\t\t(Redirect Triggered, New Target Index is " << currMod->paramIndexRedirect << ")\n";
 										std::cout << "\t\t(Redirect Triggered, New Target Index is " << currMod->paramIndexRedirect << ")\n";
 									}
 									// Print info on the match method
-									logOut << "\t\tFound match (Match:" << currMod->match << " ";
+									logStream << "\t\tFound match (Match:" << currMod->match << " ";
 									std::cout << "\t\tFound match (Match:" << currMod->match << " ";
 									switch (currMod->matchMethod)
 									{
 										case lava::matchEvaluationMethod::mtEvl_EQUALS:
 										{
 											std::cout << "==";
-											logOut << "==";
+											logStream << "==";
 											break;
 										}
 										case lava::matchEvaluationMethod::mtEvl_NOT_EQUALS:
 										{
 											std::cout << "!=";
-											logOut << "!=";
+											logStream << "!=";
 											break;
 										}
 										case lava::matchEvaluationMethod::mtEvl_GREATER:
 										{
 											std::cout << ">";
-											logOut << ">";
+											logStream << ">";
 											break;
 										}
 										case lava::matchEvaluationMethod::mtEvl_GREATER_OE:
 										{
 											std::cout << ">=";
-											logOut << ">=";
+											logStream << ">=";
 											break;
 										}
 										case lava::matchEvaluationMethod::mtEvl_LESSER:
 										{
 											std::cout << "<";
-											logOut << "<";
+											logStream << "<";
 											break;
 										}
 										case lava::matchEvaluationMethod::mtEvl_LESSER_OE:
 										{
 											std::cout << "<=";
-											logOut << "<=";
+											logStream << "<=";
 											break;
 										}
 										case lava::matchEvaluationMethod::mtEvl_BIT_AND:
 										{
 											std::cout << "&";
-											logOut << "&";
+											logStream << "&";
 											break;
 										}
 										case lava::matchEvaluationMethod::mtEvl_BIT_XOR:
 										{
 											std::cout << "^";
-											logOut << "^";
+											logStream << "^";
 											break;
 										}
 										default:
@@ -1055,25 +1053,25 @@ namespace lava
 											break;
 										}
 									}
-									logOut << " Param Value:" << currParamVals.getParamValueString() << ")\n";
+									logStream << " Param Value:" << currParamVals.getParamValueString() << ")\n";
 									std::cout << " Param Value:" << currParamVals.getParamValueString() << ")\n";
 									// Extra condition info is also only printed if relevant
 									if (currMod->extraCondition)
 									{
 										std::cout << "\t\tExtra Condition also met:";
-										logOut << "\t\tExtra Condition also met:";
+										logStream << "\t\tExtra Condition also met:";
 										switch (currMod->extraCondition)
 										{
 										case lava::extraConditionTypes::exCon_PREV_USED:
 										{
 											std::cout << " [REQ_PREV]\n";
-											logOut << " [REQ_PREV]\n";
+											logStream << " [REQ_PREV]\n";
 											break;
 										}
 										case lava::extraConditionTypes::exCon_PREV_NOT_USED:
 										{
 											std::cout << " [REQ_NOT_PREV]\n";
-											logOut << " [REQ_NOT_PREV]\n";
+											logStream << " [REQ_NOT_PREV]\n";
 											break;
 										}
 										default:
@@ -1100,7 +1098,7 @@ namespace lava
 										doScalarFinalPrint = 0;
 
 										// Do changelog reporting
-										logOut << "\t\t\tAction #" << actionItr << ": ";
+										logStream << "\t\t\tAction #" << actionItr << ": ";
 										std::cout << "\t\t\tAction #" << actionItr << ": ";
 										currAction = &currMod->actions[actionItr];
 										// Perform the appropriate changes based on the type of action
@@ -1108,7 +1106,7 @@ namespace lava
 										{
 										case modActionTypes::actTy_DO_NOTHING:
 										{
-											logOut << "[NOP]";
+											logStream << "[NOP]";
 											std::cout << "[NOP]";
 											break;
 										}
@@ -1118,7 +1116,7 @@ namespace lava
 
 											currParamVals.updateParamValue(currAction->value);
 
-											logOut << "[REP]";
+											logStream << "[REP]";
 											std::cout << "[REP]";
 											break;
 										}
@@ -1131,7 +1129,7 @@ namespace lava
 											manipNum += incomingValNum;
 											currParamVals.updateParamValue(manipNum);
 
-											logOut << "[INT_ADD]";
+											logStream << "[INT_ADD]";
 											std::cout << "[INT_ADD]";
 											break;
 										}
@@ -1144,7 +1142,7 @@ namespace lava
 											manipNum -= incomingValNum;
 											currParamVals.updateParamValue(manipNum);
 
-											logOut << "[INT_SUB]";
+											logStream << "[INT_SUB]";
 											std::cout << "[INT_SUB]";
 											break;
 										}
@@ -1157,7 +1155,7 @@ namespace lava
 											manipNum *= incomingValNum;
 											currParamVals.updateParamValue(manipNum);
 
-											logOut << "[INT_MUL]";
+											logStream << "[INT_MUL]";
 											std::cout << "[INT_MUL]";
 											break;
 										}
@@ -1170,7 +1168,7 @@ namespace lava
 											manipNum /= incomingValNum;
 											currParamVals.updateParamValue(manipNum);
 
-											logOut << "[INT_DIV]";
+											logStream << "[INT_DIV]";
 											std::cout << "[INT_DIV]";
 											break;
 										}
@@ -1184,7 +1182,7 @@ namespace lava
 											manipNum += incomingValNum;
 											currParamVals.updateParamValue(manipNum);
 
-											logOut << "[FLT_ADD]";
+											logStream << "[FLT_ADD]";
 											std::cout << "[FLT_ADD]";
 											break;
 										}
@@ -1198,7 +1196,7 @@ namespace lava
 											manipNum -= incomingValNum;
 											currParamVals.updateParamValue(manipNum);
 
-											logOut << "[FLT_SUB]";
+											logStream << "[FLT_SUB]";
 											std::cout << "[FLT_SUB]";
 											break;
 										}
@@ -1212,7 +1210,7 @@ namespace lava
 											manipNum *= incomingValNum;
 											currParamVals.updateParamValue(manipNum);
 
-											logOut << "[FLT_MUL]";
+											logStream << "[FLT_MUL]";
 											std::cout << "[FLT_MUL]";
 											break;
 										}
@@ -1226,7 +1224,7 @@ namespace lava
 											manipNum /= incomingValNum;
 											currParamVals.updateParamValue(manipNum);
 
-											logOut << "[FLT_DIV]";
+											logStream << "[FLT_DIV]";
 											std::cout << "[FLT_DIV]";
 											break;
 										}
@@ -1239,7 +1237,7 @@ namespace lava
 											manipNum &= incomingValNum;
 											currParamVals.updateParamValue(manipNum);
 
-											logOut << "[BIT_AND]";
+											logStream << "[BIT_AND]";
 											std::cout << "[BIT_AND]";
 											break;
 										}
@@ -1252,7 +1250,7 @@ namespace lava
 											manipNum |= incomingValNum;
 											currParamVals.updateParamValue(manipNum);
 
-											logOut << "[BIT_OR]";
+											logStream << "[BIT_OR]";
 											std::cout << "[BIT_OR]";
 											break;
 										}
@@ -1265,7 +1263,7 @@ namespace lava
 											manipNum ^= incomingValNum;
 											currParamVals.updateParamValue(manipNum);
 
-											logOut << "[BIT_XOR]";
+											logStream << "[BIT_XOR]";
 											std::cout << "[BIT_XOR]";
 											break;
 										}
@@ -1278,7 +1276,7 @@ namespace lava
 											manipNum = manipNum << incomingValNum;
 											currParamVals.updateParamValue(manipNum);
 
-											logOut << "[BIT_SHIFT_L]";
+											logStream << "[BIT_SHIFT_L]";
 											std::cout << "[BIT_SHIFT_L]";
 											break;
 										}
@@ -1291,7 +1289,7 @@ namespace lava
 											manipNum = manipNum >> incomingValNum;
 											currParamVals.updateParamValue(manipNum);
 
-											logOut << "[BIT_SHIFT_R]";
+											logStream << "[BIT_SHIFT_R]";
 											std::cout << "[BIT_SHIFT_R]";
 											break;
 										}
@@ -1307,7 +1305,7 @@ namespace lava
 											manipNum |= temp;
 											currParamVals.updateParamValue(manipNum);
 
-											logOut << "[BIT_ROTATE_L]";
+											logStream << "[BIT_ROTATE_L]";
 											std::cout << "[BIT_ROTATE_L]";
 											break;
 										}
@@ -1323,7 +1321,7 @@ namespace lava
 											manipNum |= temp;
 											currParamVals.updateParamValue(manipNum);
 
-											logOut << "[BIT_ROTATE_R]";
+											logStream << "[BIT_ROTATE_R]";
 											std::cout << "[BIT_ROTATE_R]";
 											break;
 										}
@@ -1334,25 +1332,25 @@ namespace lava
 												actionOccured = 1;
 												currParamVals.saveParamToContents();
 												currParamVals = lava::paramTarget(*this, paramOffsetNum, lava::hexStringToNum(currAction->value));
-												logOut << "[TARGET_PARAM]\n";
+												logStream << "[TARGET_PARAM]\n";
 												std::cout << "[TARGET_PARAM]\n";
-												logOut << "\t\t\tParameter Redirect Triggered: New target is Param Index " << hexStringToNum(currAction->value) << "\n";
-												logOut << "\t\t\tParam Val: " << currParamVals.getParamValueString();
+												logStream << "\t\t\tParameter Redirect Triggered: New target is Param Index " << hexStringToNum(currAction->value) << "\n";
+												logStream << "\t\t\tParam Val: " << currParamVals.getParamValueString();
 												std::cout << "\t\t\tParameter Redirect Triggered: New target is Param Index " << hexStringToNum(currAction->value) << "\n";
 												std::cout << "\t\t\tParam Val: " << currParamVals.getParamValueString();
 												if (currParamVals.getParamTypeNum() == lava::movesetParamTypes::varTy_SCLR)
 												{
-													logOut << " (Scalar = " << currParamVals.getParamValueNum() / lava::floatDenominator << ")";
+													logStream << " (Scalar = " << currParamVals.getParamValueNum() / lava::floatDenominator << ")";
 													std::cout << " (Scalar = " << currParamVals.getParamValueNum() / lava::floatDenominator << ")";
 												}
-												logOut << " (Redirected)\n";
+												logStream << " (Redirected)\n";
 												std::cout << " (Redirected)\n";
 											}
 											break;
 										}
 										case modActionTypes::actTy_CONVERT_PARAM:
 										{
-											logOut << "[CONVERT_PARAM]";
+											logStream << "[CONVERT_PARAM]";
 											std::cout << "[CONVERT_PARAM]";
 											unsigned int incomingValNum = lava::hexStringToNum(currAction->value);
 											if (incomingValNum < lava::movesetParamTypes::variableTypeCount)
@@ -1409,13 +1407,13 @@ namespace lava
 											}
 											else
 											{
-												logOut << "\t\t\tTarget parameter type (" << incomingValNum << ") was invalid.\n";
+												logStream << "\t\t\tTarget parameter type (" << incomingValNum << ") was invalid.\n";
 												std::cout << "\t\t\tTarget parameter type (" << incomingValNum << ") was invalid.\n";
 											}
 										}
 										default:
 										{
-											logOut << "[INVALID_TYPE]";
+											logStream << "[INVALID_TYPE]";
 											std::cout << "[INVALID_TYPE]";
 											break;
 										}
@@ -1425,25 +1423,25 @@ namespace lava
 										{
 											if (currParamVals.getParamTypeNum() == lava::movesetParamTypes::varTy_SCLR || doScalarActionPrint)
 											{
-												logOut << " Value = " << currAction->value;
+												logStream << " Value = " << currAction->value;
 												std::cout << " Value = " << currAction->value;
 												float incomingFlt = hexStringToNum(currAction->value) / lava::floatDenominator;
-												logOut << " (Scalar = " << incomingFlt << ")";
+												logStream << " (Scalar = " << incomingFlt << ")";
 												std::cout << " (Scalar = " << incomingFlt << ")";
 												float intermediateFlt = lava::hexStringToNum(intermediateParamValString) / lava::floatDenominator;
-												logOut << "\n\t\t\t\t" << intermediateParamValString << " (" << intermediateFlt << ") -> " << currParamVals.getParamValueString() << " (" << currParamVals.getParamValueNum() / lava::floatDenominator << ")\n";
+												logStream << "\n\t\t\t\t" << intermediateParamValString << " (" << intermediateFlt << ") -> " << currParamVals.getParamValueString() << " (" << currParamVals.getParamValueNum() / lava::floatDenominator << ")\n";
 												std::cout << "\n\t\t\t\t" << intermediateParamValString << " (" << intermediateFlt << ") -> " << currParamVals.getParamValueString() << " (" << currParamVals.getParamValueNum() / lava::floatDenominator << ")\n";
 											}
 											else
 											{
-												logOut << " Value = " << currAction->value << "\n\t\t\t\t" << intermediateParamValString << " -> " << currParamVals.getParamValueString() << "\n";
+												logStream << " Value = " << currAction->value << "\n\t\t\t\t" << intermediateParamValString << " -> " << currParamVals.getParamValueString() << "\n";
 												std::cout << " Value = " << currAction->value << "\n\t\t\t\t" << intermediateParamValString << " -> " << currParamVals.getParamValueString() << "\n";
 											}
 										}
 										else
 										{
 											std::cout << "\n";
-											logOut << "\n";
+											logStream << "\n";
 										}
 									}
 
@@ -1463,23 +1461,23 @@ namespace lava
 									if (lockUsed)
 									{
 										std::cout << "\t\t\tLock (" << currMod->locked << "): " << currParamVals.getParamValueString() << "\n";
-										logOut << "\t\t\tLock (" << currMod->locked << "): " << currParamVals.getParamValueString() << "\n";
+										logStream << "\t\t\tLock (" << currMod->locked << "): " << currParamVals.getParamValueString() << "\n";
 									}
 
 									// Write result to contents.
 									currParamVals.saveParamToContents();
 
 									// Report results:
-									logOut << "\t\t\tFinal Value: " << contents.getBytes(4, currParamVals.getParamOffsetNum() + currParamVals.getParamIndexOffset() + 4, numGotten);
+									logStream << "\t\t\tFinal Value: " << contents.getBytes(4, currParamVals.getParamOffsetNum() + currParamVals.getParamIndexOffset() + 4, numGotten);
 									std::cout << "\t\t\tFinal Value: " << contents.getBytes(4, currParamVals.getParamOffsetNum() + currParamVals.getParamIndexOffset() + 4, numGotten);
 									// Do scalar report if necessary
 									if (currParamVals.getParamTypeNum() == lava::movesetParamTypes::varTy_SCLR || doScalarFinalPrint)
 									{
-										logOut << " (Scalar = " << currParamVals.getParamValueNum() / lava::floatDenominator << ")";
+										logStream << " (Scalar = " << currParamVals.getParamValueNum() / lava::floatDenominator << ")";
 										std::cout << " (Scalar = " << currParamVals.getParamValueNum() / lava::floatDenominator << ")";
 									}
-									logOut << "\n";
-									std::cout << "\n";
+									logStream << "\n\n";
+									std::cout << "\n\n";
 								}
 								else
 								{
@@ -1490,7 +1488,7 @@ namespace lava
 							// Prints a new line if no matches were reported, just keeps logs pretty
 							if (!matchFound)
 							{
-								logOut << "\n";
+								logStream << "\n";
 								std::cout << "\n";
 							}
 						}
@@ -1504,32 +1502,32 @@ namespace lava
 		}
 
 		// Do summary
-		std::cout << "Patch Results Summary:\n";
-		logOut << "Patch Results Summary:\n";
+		std::cout << "\n\"" << patchIn.name << "\" Patch Results Summary:\n";
+		logStream << "\n\"" << patchIn.name << "\" Patch Results Summary:\n";
 		// Iterate through each target:
 		for (std::size_t i = 0; i < targetCount; i++)
 		{
-			logOut << "\t\"" << patchIn.targets[i].name << "\":\n";
+			logStream << "\t\"" << patchIn.targets[i].name << "\":\n";
 			std::cout << "\t\"" << patchIn.targets[i].name << "\":\n";
 			for (std::size_t modItr = 0; modItr < modificationCount; modItr++)
 			{
-				logOut << "\t\t\"" << patchIn.modifications[modItr].name << "\"";
+				logStream << "\t\t\"" << patchIn.modifications[modItr].name << "\"";
 				std::cout << "\t\t\"" << patchIn.modifications[modItr].name << "\"";
 				std::size_t appliedCount = results.timesTargetsHit[i][modItr];
 				if (appliedCount == 0)
 				{
-					logOut << " was never applied.\n";
+					logStream << " was never applied.\n";
 					std::cout << " was never applied.\n";
 				}
 				else
 				{
-					logOut << " applied " << appliedCount << " time(s)\n";
+					logStream << " applied " << appliedCount << " time(s)\n";
 					std::cout << " applied " << appliedCount << " time(s)\n";
 				}
 			}
 		}
 		std::cout << "\n";
-		logOut << "\n";
+		logStream << "\n";
 
 		return results;
 	}

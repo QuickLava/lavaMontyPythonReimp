@@ -16,6 +16,8 @@
 
 namespace lava
 {
+	extern std::ofstream changelogStream;
+
 	std::string stringToUpper(const std::string& stringIn);
 	std::string sanitizeHexStrInput(const std::string& stringIn, bool XAllowed = 0);
 	
@@ -135,6 +137,7 @@ namespace lava
 	struct movesetPatch
 	{
 		std::string name = "";
+		std::string sourceFile = "";
 		std::vector<movesetPatchTarget> targets = {};
 		std::vector<movesetPatchMod> modifications = {};
 	};
@@ -161,15 +164,14 @@ namespace lava
 		std::string filePath = "";
 
 		byteArray contents;
-		bool init(std::string filePathIn);
+		bool init(std::string filePathIn, std::ostream& logStream);
 		std::string fetchString(std::size_t strAddr);
 		void summarizeTable(std::size_t tableAddr, std::size_t entryCount, std::size_t offsetShiftSize, std::string prefix = "\t\t", std::ostream& output = std::cout);
 		void summarizeOffsetSection(std::ostream& output = std::cout, std::size_t adjustment = 0x80);
 
 		std::vector<std::size_t> changeMatchingParameter(std::vector<std::pair<std::string, std::vector<char>>> functions, std::vector<std::pair<std::string, std::string>> matches, std::size_t parameterOffsetInBytes);
 
-		
-		movesetPatchResult applyMovesetPatch(const movesetPatch& patchIn);
+		movesetPatchResult applyMovesetPatch(const movesetPatch& patchIn, std::ostream& logStream);
 	};
 
 	struct paramTarget
