@@ -24,6 +24,9 @@
     <ClCompile Include="pugi\pugixml.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="lavaMPRUtility.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lavaMontyPythonReimp.h">
@@ -33,6 +36,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="pugi\pugixml.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lavaMPRUtility.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,43 +1,22 @@
 #ifndef LAVA_MONTY_PYTHON_REIMP_H_V1
 #define LAVA_MONTY_PYTHON_REIMP_H_V2
 
-#include <conio.h>
-#include <iostream>
-#include <string>
-#include <vector>
-#include <array>
-#include <fstream>
-#include <sstream>
-#include <cctype>
-#include <algorithm>
-#include <iomanip>
-#include <map>
-#include "pugi/pugixml.hpp"
+#include "lavaMPRUtility.h"
 
 namespace lava
 {
 	extern std::ofstream changelogStream;
-
-	std::string stringToUpper(const std::string& stringIn);
-	std::string sanitizeHexStrInput(const std::string& stringIn, bool XAllowed = 0);
-	
-	std::size_t hexVecToNum(const std::vector<char>& vecIn);
-	std::vector<char> numToHexVec(std::size_t vecIn);
-	std::size_t hexStringToNum(const std::string& stringIn);
-	std::string numToHexStringWithPadding(std::size_t numIn, std::size_t paddingLength);
-	std::string numToDecStringWithPadding(std::size_t numIn, std::size_t paddingLength);
-	bool hexStrComp(const std::string& str1, const std::string& str2);
-	std::vector<std::pair<std::string, std::string>> createValuePairs(std::ifstream& fileIn);
-	void addVectors(std::vector<std::size_t> &vec1, const std::vector<std::size_t> &vec2);
-
-	struct movesetPatch;
-	std::vector<movesetPatch> parseMovesetPatchXML(std::string fileIn);
-
 	constexpr std::size_t canonParamLengthStr = 8;
 	constexpr std::size_t canonParamLengthInBytes = canonParamLengthStr / 2;
 	constexpr std::size_t globalBaseOffset = 0x80;
 	constexpr float floatDenominator = 0xEA60;
 	const std::string changelogSuffix = "_changelog.txt";
+	
+	std::string sanitizeHexStrInput(const std::string& stringIn, bool XAllowed = 0);
+	bool hexStrComp(const std::string& str1, const std::string& str2);
+
+	struct movesetPatch;
+	std::vector<movesetPatch> parseMovesetPatchXML(std::string fileIn);
 
 	struct byteArray
 	{
@@ -224,8 +203,5 @@ namespace lava
 		bool saveParamToContents();
 	};
 }
-
-std::ostream& operator<<(std::ostream& out, const std::vector<char>& in);
-
 
 #endif

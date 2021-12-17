@@ -4,12 +4,19 @@ namespace lava
 {
 	std::ofstream changelogStream = std::ofstream();
 
-	std::string stringToUpper(const std::string& stringIn)
+	bool hexStrComp(const std::string& str1, const std::string& str2)
 	{
-		std::string result = stringIn;
-		for (std::size_t i = 0; i < result.size(); i++)
+		bool result = 0;
+		if (str1.size() == str2.size())
 		{
-			result[i] = toupper(result[i]);
+			std::size_t len = str1.size();
+			std::size_t i = 0;
+			result = 1;
+			while (result && i < len)
+			{
+				result = str1[i] == str2[i] || str1[i] == 'X' || str2[i] == 'X' || str1[i] == 'x' || str2[i] == 'x';
+				i++;
+			}
 		}
 		return result;
 	}
@@ -40,135 +47,6 @@ namespace lava
 			}
 		}
 		return result;
-	}
-
-	std::size_t hexVecToNum(const std::vector<char>& vecIn)
-	{
-		std::size_t result = SIZE_MAX;
-		std::size_t vecLength = vecIn.size();
-		if (vecLength <= 4)
-		{
-			int temp = 0x0;
-			result = 0;
-			for (std::size_t i = 0; i < vecLength; i++)
-			{
-				result = result << 8;
-				temp = vecIn[i];
-				temp &= 0x000000FF;
-				result |= temp;
-			}
-		}
-		else
-		{
-			std::cerr << "Provided vector unsupported. Max length is 4 bytes, provided was " << vecLength << ".\n";
-		}
-		return result;
-	}
-	std::vector<char> numToHexVec(std::size_t vecIn)
-	{
-		std::vector<char> result(4, 0);
-
-		union
-		{
-			std::size_t n;
-			char arr[4];
-		} s;
-		s.n = vecIn;
-		result[0] = s.arr[3];
-		result[1] = s.arr[2];
-		result[2] = s.arr[1];
-		result[3] = s.arr[0];
-		//std::cout << "Res = " << result << ", src = " << std::hex << vecIn << std::dec << "\n";
-		return result;
-	}
-	std::size_t hexStringToNum(const std::string& stringIn)
-	{
-		std::size_t result = 0;
-		result = std::stoul("0x" + stringIn, nullptr, 16);
-		return result;
-	}
-	std::string numToHexStringWithPadding(std::size_t numIn, std::size_t paddingLength)
-	{
-		std::stringstream convBuff;
-		convBuff << std::hex << numIn;
-		std::string result = convBuff.str();
-		for (int i = 0; i < result.size(); i++)
-		{
-			result[i] = std::toupper(result[i]);
-		}
-		if (result.size() < paddingLength)
-		{
-			result = std::string(paddingLength - result.size(), '0') + result;
-		}
-		return result;
-	}
-	std::string numToDecStringWithPadding(std::size_t numIn, std::size_t paddingLength)
-	{
-		std::string result = std::to_string(numIn);
-		if (result.size() < paddingLength)
-		{
-			result = std::string(paddingLength - result.size(), '0') + result;
-		}
-		return result;
-	}
-
-	bool hexStrComp(const std::string& str1, const std::string& str2)
-	{
-		bool result = 0;
-		if (str1.size() == str2.size())
-		{
-			std::size_t len = str1.size();
-			std::size_t i = 0;
-			result = 1;
-			while (result && i < len)
-			{
-				result = str1[i] == str2[i] || str1[i] == 'X' || str2[i] == 'X' || str1[i] == 'x' || str2[i] == 'x';
-				i++;
-			}
-		}
-		return result;
-	}
-	std::vector<std::pair<std::string, std::string>> createValuePairs(std::ifstream& fileIn)
-	{
-		std::vector<std::pair<std::string, std::string>> result;
-		std::string currentLine = "";
-		std::string buff1 = "";
-		std::string buff2 = "";
-		std::string commentChars = "#";
-		std::size_t delimPos = SIZE_MAX;
-		while (std::getline(fileIn, currentLine))
-		{
-			currentLine.erase(std::remove(currentLine.begin(), currentLine.end(), ' '), currentLine.end());
-			if (currentLine.size() && commentChars.find(currentLine[0]) == std::string::npos)
-			{
-				delimPos = currentLine.find(',');
-				if (delimPos > 0 && delimPos < (currentLine.size() - 1))
-				{
-					buff1 = currentLine.substr(0, delimPos).data();
-					if (buff1.size() < canonParamLengthStr)
-					{
-						buff1 = std::string(canonParamLengthStr - buff1.size(), '0') + buff1;
-					}
-					buff2 = currentLine.substr(delimPos + 1, std::string::npos);
-					if (buff2.size() < canonParamLengthStr)
-					{
-						buff2 = std::string(canonParamLengthStr - buff2.size(), '0') + buff2;
-					}
-					result.push_back({ buff1, buff2 });
-					std::cout << "\tPair: [" << result.back().first << ", " << result.back().second << "]\n";
-				}
-			}
-		}
-		return result;
-	}
-
-	void addVectors(std::vector<std::size_t>& vec1, const std::vector<std::size_t>& vec2)
-	{
-		std::size_t minSize = std::min(vec1.size(), vec2.size());
-		for (std::size_t i = 0; i < minSize; i++)
-		{
-			vec1[i] += vec2[i];
-		}
 	}
 
 	std::vector<movesetPatch> parseMovesetPatchXML(std::string fileIn)
@@ -693,103 +571,6 @@ namespace lava
 		}
 	}
 
-	std::vector<std::size_t> movesetFile::changeMatchingParameter(std::vector<std::pair<std::string, std::vector<char>>> functions, std::vector<std::pair<std::string, std::string>> matches, std::size_t parameterOffsetInBytes)
-	{
-		std::vector<std::size_t> matchResults;
-		matchResults.resize(matches.size(), 0);
-		std::size_t affected = 0;
-		std::size_t funcCount = functions.size();
-		std::size_t pingCount = 0;
-		std::size_t matchesCount = matches.size();
-		bool matchFound = 0;
-		std::string paramValStr = "";
-		std::pair<std::string, std::vector<char>>* currFunc = nullptr;
-		std::vector<std::size_t> searchPings = {};
-		std::vector<char> paramOffset = {};
-		std::size_t paramOffsetNum = 0;
-		std::vector<char> paramVal = {};
-		std::ofstream logStream;
-		logStream.open(filePath.substr(0, filePath.rfind('.')) + changelogSuffix, std::ios_base::app);
-		for (std::size_t i = 0; i < funcCount; i++)
-		{
-			currFunc = &functions[i];
-			logStream << currFunc->first << " Param Changes:\n";
-			std::cout << "Processing Function \"" << currFunc->first << "\":\n";
-			searchPings = contents.searchMultiple(currFunc->second, 0, movesetLength + 0x60 - currFunc->second.size());
-			pingCount = searchPings.size();
-			std::size_t numGotten;
-			for (std::size_t u = 0; u < pingCount; u++)
-			{
-				paramOffset = contents.getBytes(4, searchPings[u] + currFunc->second.size(), numGotten);
-				if (numGotten == 4)
-				{
-					paramOffsetNum = hexVecToNum(paramOffset);
-					std::cout << "\t[0x" << std::hex << searchPings[u] << "]Params @ 0x" << paramOffsetNum << " (0x";
-					paramOffsetNum += globalBaseOffset;
-					std::cout << paramOffsetNum << " for abs. offset)" << std::dec << "\n";
-					paramVal = contents.getBytes(canonParamLengthInBytes, paramOffsetNum + parameterOffsetInBytes, numGotten);
-					std::cout << "\t\tParam Val: " << paramVal << "\n";
-					std::size_t y = 0;
-					matchFound = 0;
-					while (!matchFound && y < matchesCount)
-					{
-						paramValStr = numToHexStringWithPadding(hexVecToNum(paramVal), 8);
-						std::pair<std::string, std::string>* matchPtr = &matches[y];
-						if (hexStrComp(matchPtr->first, paramValStr))
-						{
-							matchResults[y]++;
-							logStream << "\t[0x" << std::hex << lava::numToHexStringWithPadding(searchPings[u], 8) << std::dec << "->0x" << paramOffset << "]: Changed Param from 0x" << paramValStr << " to 0x";
-							std::cout << "\t\tFOUND MATCH! ";
-							matchFound = 1;
-							for (std::size_t t = 0; t < canonParamLengthStr; t++)
-							{
-								if (matchPtr->second[t] != 'x' && matchPtr->second[t] != 'X')
-								{
-									paramValStr[t] = matchPtr->second[t];
-								}
-							}
-							contents.setBytes(numToHexVec(hexStringToNum(paramValStr)), paramOffsetNum + parameterOffsetInBytes);
-							logStream << contents.getBytes(canonParamLengthInBytes, paramOffsetNum + parameterOffsetInBytes, numGotten) << "\n";
-							std::cout << "Param Transformed to: " << contents.getBytes(canonParamLengthInBytes, paramOffsetNum + parameterOffsetInBytes, numGotten) << "\n";
-							affected++;
-						}
-						y++;
-					}
-					//std::cout << "\t\tBody Preview:\n";
-					//for (std::size_t y = 0; y < 4; y++)
-					//{
-					//	std::cout << "\t\t\t" << contents.getBytes(32, paramOffsetNum + (32 * y), numGotten) << "\n";
-					//}
-				}
-				else
-				{
-					std::cerr << "\tSomething went wrong, received wrong number of bytes for param offset while processing " << currFunc->first << " instance @ 0x" << std::hex << searchPings[u] << std::dec << ".\n";
-				}
-			}
-			std::cout << "\n";
-		}
-
-		std::cout << "Match summary:\n";
-		logStream << "Match summary:\n";
-		for (std::size_t i = 0; i < matchesCount; i++)
-		{
-			if (matchResults[i] == 0)
-			{
-				std::cout << "\tMatch #" << numToDecStringWithPadding(i, 3) << " (" << matches[i].first << " -> " << matches[i].second << ") was never used.\n";
-				logStream << "\tMatch #" << numToDecStringWithPadding(i, 3) << " (" << matches[i].first << " -> " << matches[i].second <<") was never used.\n";
-			}
-			else
-			{
-				std::cout << "\tMatch #" << numToDecStringWithPadding(i, 3) << " (" << matches[i].first << " -> " << matches[i].second << ") used " << matchResults[i] << " time(s).\n";
-				logStream << "\tMatch #" << numToDecStringWithPadding(i, 3) << " (" << matches[i].first << " -> " << matches[i].second << ") used " << matchResults[i] << " time(s).\n";
-			}
-		}
-		std::cout << "\n";
-		logStream << "\n";
-
-		return matchResults;
-	}
-
 	lava::movesetPatchResult movesetFile::applyMovesetPatch(const lava::movesetPatch& patchIn, std::ostream& logStream)
 	{
 		// Initialize results struct
@@ -815,8 +596,8 @@ namespace lava
 		{
 			// Grab pointer to current target, and ping for its signature within the data section
 			const movesetPatchTarget* currTarget = &patchIn.targets[targetItr];
-			std::cout << "\"" << currTarget->name << "\" [0x" << currTarget->signature << "] (Param " << currTarget->paramIndex;
-			logStream << "\"" << currTarget->name << "\" [0x" << currTarget->signature << "] (Param " << currTarget->paramIndex;
+			std::cout << "\"" << currTarget->name << "\" [0x" << lava::hexVecToHexStringWithPadding(currTarget->signature, lava::canonParamLengthStr) << "] (Param " << currTarget->paramIndex;
+			logStream << "\"" << currTarget->name << "\" [0x" << lava::hexVecToHexStringWithPadding(currTarget->signature, lava::canonParamLengthStr) << "] (Param " << currTarget->paramIndex;
 			if (currTarget->paramType != INT_MAX)
 			{
 				std::cout << ", of Type " << currTarget->paramType;
@@ -861,8 +642,8 @@ namespace lava
 							const movesetPatchMod* currMod = nullptr;
 
 							// Do initial param val reporting
-							logStream << ", Param Val: " << currParamVals.getParamValue();
-							std::cout << ", Param Val: " << currParamVals.getParamValue();
+							logStream << ", Param Val: " << currParamVals.getParamValueString();
+							std::cout << ", Param Val: " << currParamVals.getParamValueString();
 							if (currParamVals.getParamTypeNum() == lava::movesetParamTypes::varTy_SCLR)
 							{
 								logStream << " (Scalar = " << currParamVals.getParamValueNum() / lava::floatDenominator << ")";
@@ -1475,8 +1256,8 @@ namespace lava
 									currParamVals.saveParamToContents();
 
 									// Report results:
-									logStream << "\t\t\tFinal Value: " << contents.getBytes(4, currParamVals.getParamOffsetNum() + currParamVals.getParamIndexOffset() + 4, numGotten);
-									std::cout << "\t\t\tFinal Value: " << contents.getBytes(4, currParamVals.getParamOffsetNum() + currParamVals.getParamIndexOffset() + 4, numGotten);
+									logStream << "\t\t\tFinal Value: " << lava::hexVecToHexStringWithPadding(contents.getBytes(4, currParamVals.getParamOffsetNum() + currParamVals.getParamIndexOffset() + 4, numGotten), lava::canonParamLengthStr);
+									std::cout << "\t\t\tFinal Value: " << lava::hexVecToHexStringWithPadding(contents.getBytes(4, currParamVals.getParamOffsetNum() + currParamVals.getParamIndexOffset() + 4, numGotten), lava::canonParamLengthStr);
 									// Do scalar report if necessary
 									if (currParamVals.getParamTypeNum() == lava::movesetParamTypes::varTy_SCLR || doScalarFinalPrint)
 									{
@@ -1628,7 +1409,6 @@ namespace lava
 		paramValueNum = lava::hexVecToNum(paramValue);
 		paramValueString = lava::numToHexStringWithPadding(paramValueNum, 8);
 	}
-
 	bool paramTarget::saveParamToContents()
 	{
 		bool result = 1;
@@ -1638,28 +1418,3 @@ namespace lava
 	}
 }
 
-//std::ostream& operator<<(std::ostream& out, const std::vector<char>& in)
-//{
-//	out << std::hex;
-//	std::size_t size = in.size();
-//	int val = 0;
-//	for (int i = 0; i < size; i++)
-//	{
-//		val = in[i];
-//		val &= 0x000000FF;
-//		out << ((val < 0x10) ? "0": "") << val;
-//	}
-//	out << std::dec;
-//	return out;
-//}
-
-std::ostream& operator<<(std::ostream& out, const std::vector<char>& in)
-{
-	if (in.size())
-	{
-		int val = lava::hexVecToNum(in);
-		std::string res = lava::numToHexStringWithPadding(val, in.size() * 2);
-		out << res;
-	}
-	return out;
-}

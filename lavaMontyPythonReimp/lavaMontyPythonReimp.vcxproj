@@ -140,11 +140,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="lavaMontyPythonReimp.cpp" />
+    <ClCompile Include="lavaMPRUtility.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="pugi\pugixml.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lavaMontyPythonReimp.h" />
+    <ClInclude Include="lavaMPRUtility.h" />
     <ClInclude Include="pugi\pugiconfig.hpp" />
     <ClInclude Include="pugi\pugixml.hpp" />
   </ItemGroup>
