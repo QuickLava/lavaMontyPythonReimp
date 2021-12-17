@@ -5,7 +5,7 @@
 		<command name = "Graphic Effect (Attached)" signature = "0x11010A00" paramIndex="0"/>
 	</targets>
 	<modifications>
-		<mod match = "0000XXXX" extraCondition = "1">
+		<mod match = "0000XXXX" evalMethod = "1">
 			<action type = "0xA0" value = "00000004"/>
 			<action type = "0xA1" value = "00000004"/>
 			<action type = "0xA2" value = "00000004"/>
