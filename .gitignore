@@ -3,3 +3,5 @@ Debug/**
 Release/**
 lavaMontyPythonReimp/Debug/**
 lavaMontyPythonReimp/Release/**
+lavaMontyPythonReimp/*.pac
+lavaMontyPythonReimp/*.txt

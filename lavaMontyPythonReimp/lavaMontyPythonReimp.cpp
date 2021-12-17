@@ -841,10 +841,10 @@ namespace lava
 					if (paramOffsetNum < (dataOffset + dataLength))
 					{
 						// Create our param target. This holds the current value of the target parameter, as well as where it's stored in the file, and is the variable that we'll be modifying to make changes to the parameter's value and type.
-						lava::paramTarget neoParamVals(*this, paramOffsetNum, currTarget->paramIndex);
+						lava::paramTarget currParamVals(*this, paramOffsetNum, currTarget->paramIndex);
 
 						// Process target paramType matching. If no type was specified, or if one was specified and it matches our found type, proceed.
-						if (currTarget->paramType == INT_MAX || neoParamVals.getParamTypeNum() == currTarget->paramType)
+						if (currTarget->paramType == INT_MAX || currParamVals.getParamTypeNum() == currTarget->paramType)
 						{
 							// Report location of current ping, as well as its paramOffset. Note, the first paramOffset we report is non .pac adjusted since that's the one you'll see in PSAC, which is what I expect most people will be looking for. The adjusted value is provided second.
 							logOut << "\t[0x" << numToHexStringWithPadding(currPing, 8) << "]: Params @ 0x" << numToHexStringWithPadding(paramOffsetNum - dataOffset, 8);
@@ -860,12 +860,12 @@ namespace lava
 							const movesetPatchMod* currMod = nullptr;
 
 							// Do initial param val reporting
-							logOut << ", Param Val: " << neoParamVals.getParamValue();
-							std::cout << ", Param Val: " << neoParamVals.getParamValue();
-							if (neoParamVals.getParamTypeNum() == lava::movesetParamTypes::varTy_SCLR)
+							logOut << ", Param Val: " << currParamVals.getParamValue();
+							std::cout << ", Param Val: " << currParamVals.getParamValue();
+							if (currParamVals.getParamTypeNum() == lava::movesetParamTypes::varTy_SCLR)
 							{
-								logOut << " (Scalar = " << neoParamVals.getParamValueNum() / lava::floatDenominator << ")";
-								std::cout << " (Scalar = " << neoParamVals.getParamValueNum() / lava::floatDenominator << ")";
+								logOut << " (Scalar = " << currParamVals.getParamValueNum() / lava::floatDenominator << ")";
+								std::cout << " (Scalar = " << currParamVals.getParamValueNum() / lava::floatDenominator << ")";
 							}
 							logOut << "\n";
 							std::cout << "\n";
@@ -881,7 +881,7 @@ namespace lava
 								if (currMod->paramIndexRedirect != INT_MAX)
 								{
 									//... reinitialize the param bundle to point to the new param.
-									neoParamVals = lava::paramTarget(*this, paramOffsetNum, currMod->paramIndexRedirect);
+									currParamVals = lava::paramTarget(*this, paramOffsetNum, currMod->paramIndexRedirect);
 									// Record that the redirect happened (used for reporting later).
 									redirectUsed = 1;
 								}
@@ -889,7 +889,7 @@ namespace lava
 								else
 								{
 									//... ensure we're on the parameter originally specified by the target.
-									neoParamVals = lava::paramTarget(*this, paramOffsetNum, currTarget->paramIndex);
+									currParamVals = lava::paramTarget(*this, paramOffsetNum, currTarget->paramIndex);
 									// Record that no redirect happened.
 									redirectUsed = 0;
 								}
@@ -902,7 +902,7 @@ namespace lava
 								{
 									if (tempEvalStr[i] == 'X')
 									{
-										tempEvalStr[i] = neoParamVals.getParamValueString()[i];
+										tempEvalStr[i] = currParamVals.getParamValueString()[i];
 									}
 								}
 								// Actually evaluate the various methods.
@@ -910,42 +910,42 @@ namespace lava
 								{
 									case lava::matchEvaluationMethod::mtEvl_EQUALS:
 									{
-										matchEvalRes = hexStrComp(tempEvalStr, neoParamVals.getParamValueString());
+										matchEvalRes = hexStrComp(tempEvalStr, currParamVals.getParamValueString());
 										break;
 									}
 									case lava::matchEvaluationMethod::mtEvl_NOT_EQUALS:
 									{
-										matchEvalRes = !hexStrComp(tempEvalStr, neoParamVals.getParamValueString());
+										matchEvalRes = !hexStrComp(tempEvalStr, currParamVals.getParamValueString());
 										break;
 									}
 									case lava::matchEvaluationMethod::mtEvl_GREATER:
 									{
-										matchEvalRes = lava::hexStringToNum(tempEvalStr) > neoParamVals.getParamValueNum();
+										matchEvalRes = lava::hexStringToNum(tempEvalStr) > currParamVals.getParamValueNum();
 										break;
 									}
 									case lava::matchEvaluationMethod::mtEvl_GREATER_OE:
 									{
-										matchEvalRes = lava::hexStringToNum(tempEvalStr) >= neoParamVals.getParamValueNum();
+										matchEvalRes = lava::hexStringToNum(tempEvalStr) >= currParamVals.getParamValueNum();
 										break;
 									}
 									case lava::matchEvaluationMethod::mtEvl_LESSER:
 									{
-										matchEvalRes = lava::hexStringToNum(tempEvalStr) < neoParamVals.getParamValueNum();
+										matchEvalRes = lava::hexStringToNum(tempEvalStr) < currParamVals.getParamValueNum();
 										break;
 									}
 									case lava::matchEvaluationMethod::mtEvl_LESSER_OE:
 									{
-										matchEvalRes = lava::hexStringToNum(tempEvalStr) <= neoParamVals.getParamValueNum();
+										matchEvalRes = lava::hexStringToNum(tempEvalStr) <= currParamVals.getParamValueNum();
 										break;
 									}
 									case lava::matchEvaluationMethod::mtEvl_BIT_AND:
 									{
-										matchEvalRes = lava::hexStringToNum(tempEvalStr) & neoParamVals.getParamValueNum();
+										matchEvalRes = lava::hexStringToNum(tempEvalStr) & currParamVals.getParamValueNum();
 										break;
 									}
 									case lava::matchEvaluationMethod::mtEvl_BIT_XOR:
 									{
-										matchEvalRes = lava::hexStringToNum(tempEvalStr) ^ neoParamVals.getParamValueNum();
+										matchEvalRes = lava::hexStringToNum(tempEvalStr) ^ currParamVals.getParamValueNum();
 										break;
 									}
 									default:
@@ -1052,8 +1052,8 @@ namespace lava
 											break;
 										}
 									}
-									logOut << " Param Value:" << neoParamVals.getParamValueString() << ")\n";
-									std::cout << " Param Value:" << neoParamVals.getParamValueString() << ")\n";
+									logOut << " Param Value:" << currParamVals.getParamValueString() << ")\n";
+									std::cout << " Param Value:" << currParamVals.getParamValueString() << ")\n";
 									// Extra condition info is also only printed if relevant
 									if (currMod->extraCondition)
 									{
@@ -1082,15 +1082,15 @@ namespace lava
 
 									// Initialize variables for use in loop
 									const movesetPatchModAction* currAction = nullptr;
-									const std::string canonParamValString = neoParamVals.getParamValueString();
-									std::string intermediateParamValString = neoParamVals.getParamValueString();
+									const std::string canonParamValString = currParamVals.getParamValueString();
+									std::string intermediateParamValString = currParamVals.getParamValueString();
 									bool actionOccured = 0;
 
 									// Iterate through each action:
 									for (std::size_t actionItr = 0; actionItr < currMod->actions.size(); actionItr++)
 									{
 										// Store intermediate paramString
-										intermediateParamValString = neoParamVals.getParamValueString();
+										intermediateParamValString = currParamVals.getParamValueString();
 										// Reset action tracker
 										actionOccured = 0;
 										doScalarActionPrint = 0;
@@ -1113,7 +1113,7 @@ namespace lava
 										{
 											actionOccured = 1;
 
-											neoParamVals.updateParamValue(currAction->value);
+											currParamVals.updateParamValue(currAction->value);
 
 											logOut << "[REP]";
 											std::cout << "[REP]";
@@ -1124,9 +1124,9 @@ namespace lava
 											actionOccured = 1;
 
 											unsigned int incomingValNum = hexStringToNum(currAction->value);
-											unsigned int manipNum = neoParamVals.getParamValueNum();
+											unsigned int manipNum = currParamVals.getParamValueNum();
 											manipNum += incomingValNum;
-											neoParamVals.updateParamValue(manipNum);
+											currParamVals.updateParamValue(manipNum);
 
 											logOut << "[INT_ADD]";
 											std::cout << "[INT_ADD]";
@@ -1137,9 +1137,9 @@ namespace lava
 											actionOccured = 1;
 
 											unsigned int incomingValNum = hexStringToNum(currAction->value);
-											unsigned int manipNum = neoParamVals.getParamValueNum();
+											unsigned int manipNum = currParamVals.getParamValueNum();
 											manipNum -= incomingValNum;
-											neoParamVals.updateParamValue(manipNum);
+											currParamVals.updateParamValue(manipNum);
 
 											logOut << "[INT_SUB]";
 											std::cout << "[INT_SUB]";
@@ -1150,9 +1150,9 @@ namespace lava
 											actionOccured = 1;
 
 											unsigned int incomingValNum = hexStringToNum(currAction->value);
-											unsigned int manipNum = neoParamVals.getParamValueNum();
+											unsigned int manipNum = currParamVals.getParamValueNum();
 											manipNum *= incomingValNum;
-											neoParamVals.updateParamValue(manipNum);
+											currParamVals.updateParamValue(manipNum);
 
 											logOut << "[INT_MUL]";
 											std::cout << "[INT_MUL]";
@@ -1163,9 +1163,9 @@ namespace lava
 											actionOccured = 1;
 
 											unsigned int incomingValNum = hexStringToNum(currAction->value);
-											unsigned int manipNum = neoParamVals.getParamValueNum();
+											unsigned int manipNum = currParamVals.getParamValueNum();
 											manipNum /= incomingValNum;
-											neoParamVals.updateParamValue(manipNum);
+											currParamVals.updateParamValue(manipNum);
 
 											logOut << "[INT_DIV]";
 											std::cout << "[INT_DIV]";
@@ -1177,9 +1177,9 @@ namespace lava
 											doScalarActionPrint = 1;
 
 											unsigned int incomingValNum = hexStringToNum(currAction->value);
-											unsigned int manipNum = neoParamVals.getParamValueNum();
+											unsigned int manipNum = currParamVals.getParamValueNum();
 											manipNum += incomingValNum;
-											neoParamVals.updateParamValue(manipNum);
+											currParamVals.updateParamValue(manipNum);
 
 											logOut << "[FLT_ADD]";
 											std::cout << "[FLT_ADD]";
@@ -1191,9 +1191,9 @@ namespace lava
 											doScalarActionPrint = 1;
 
 											unsigned int incomingValNum = hexStringToNum(currAction->value);
-											unsigned int manipNum = neoParamVals.getParamValueNum();
+											unsigned int manipNum = currParamVals.getParamValueNum();
 											manipNum -= incomingValNum;
-											neoParamVals.updateParamValue(manipNum);
+											currParamVals.updateParamValue(manipNum);
 
 											logOut << "[FLT_SUB]";
 											std::cout << "[FLT_SUB]";
@@ -1205,9 +1205,9 @@ namespace lava
 											doScalarActionPrint = 1;
 
 											unsigned int incomingValNum = hexStringToNum(currAction->value);
-											unsigned int manipNum = neoParamVals.getParamValueNum();
+											unsigned int manipNum = currParamVals.getParamValueNum();
 											manipNum *= incomingValNum;
-											neoParamVals.updateParamValue(manipNum);
+											currParamVals.updateParamValue(manipNum);
 
 											logOut << "[FLT_MUL]";
 											std::cout << "[FLT_MUL]";
@@ -1219,9 +1219,9 @@ namespace lava
 											doScalarActionPrint = 1;
 
 											unsigned int incomingValNum = hexStringToNum(currAction->value);
-											unsigned int manipNum = neoParamVals.getParamValueNum();
+											unsigned int manipNum = currParamVals.getParamValueNum();
 											manipNum /= incomingValNum;
-											neoParamVals.updateParamValue(manipNum);
+											currParamVals.updateParamValue(manipNum);
 
 											logOut << "[FLT_DIV]";
 											std::cout << "[FLT_DIV]";
@@ -1232,9 +1232,9 @@ namespace lava
 											actionOccured = 1;
 
 											unsigned int incomingValNum = hexStringToNum(currAction->value);
-											unsigned int manipNum = neoParamVals.getParamValueNum();
+											unsigned int manipNum = currParamVals.getParamValueNum();
 											manipNum &= incomingValNum;
-											neoParamVals.updateParamValue(manipNum);
+											currParamVals.updateParamValue(manipNum);
 
 											logOut << "[BIT_AND]";
 											std::cout << "[BIT_AND]";
@@ -1245,9 +1245,9 @@ namespace lava
 											actionOccured = 1;
 
 											unsigned int incomingValNum = hexStringToNum(currAction->value);
-											unsigned int manipNum = neoParamVals.getParamValueNum();
+											unsigned int manipNum = currParamVals.getParamValueNum();
 											manipNum |= incomingValNum;
-											neoParamVals.updateParamValue(manipNum);
+											currParamVals.updateParamValue(manipNum);
 
 											logOut << "[BIT_OR]";
 											std::cout << "[BIT_OR]";
@@ -1258,9 +1258,9 @@ namespace lava
 											actionOccured = 1;
 
 											unsigned int incomingValNum = hexStringToNum(currAction->value);
-											unsigned int manipNum = neoParamVals.getParamValueNum();
+											unsigned int manipNum = currParamVals.getParamValueNum();
 											manipNum ^= incomingValNum;
-											neoParamVals.updateParamValue(manipNum);
+											currParamVals.updateParamValue(manipNum);
 
 											logOut << "[BIT_XOR]";
 											std::cout << "[BIT_XOR]";
@@ -1271,9 +1271,9 @@ namespace lava
 											actionOccured = 1;
 
 											unsigned int incomingValNum = hexStringToNum(currAction->value);
-											unsigned int manipNum = neoParamVals.getParamValueNum();
+											unsigned int manipNum = currParamVals.getParamValueNum();
 											manipNum = manipNum << incomingValNum;
-											neoParamVals.updateParamValue(manipNum);
+											currParamVals.updateParamValue(manipNum);
 
 											logOut << "[BIT_SHIFT_L]";
 											std::cout << "[BIT_SHIFT_L]";
@@ -1284,9 +1284,9 @@ namespace lava
 											actionOccured = 1;
 
 											unsigned int incomingValNum = hexStringToNum(currAction->value);
-											unsigned int manipNum = neoParamVals.getParamValueNum();
+											unsigned int manipNum = currParamVals.getParamValueNum();
 											manipNum = manipNum >> incomingValNum;
-											neoParamVals.updateParamValue(manipNum);
+											currParamVals.updateParamValue(manipNum);
 
 											logOut << "[BIT_SHIFT_R]";
 											std::cout << "[BIT_SHIFT_R]";
@@ -1297,12 +1297,12 @@ namespace lava
 											actionOccured = 1;
 
 											unsigned int incomingValNum = hexStringToNum(currAction->value);
-											unsigned int manipNum = neoParamVals.getParamValueNum();
+											unsigned int manipNum = currParamVals.getParamValueNum();
 											unsigned int temp = manipNum;
 											manipNum = manipNum << incomingValNum;
 											temp = temp >> (32 - incomingValNum);
 											manipNum |= temp;
-											neoParamVals.updateParamValue(manipNum);
+											currParamVals.updateParamValue(manipNum);
 
 											logOut << "[BIT_ROTATE_L]";
 											std::cout << "[BIT_ROTATE_L]";
@@ -1313,12 +1313,12 @@ namespace lava
 											actionOccured = 1;
 
 											unsigned int incomingValNum = hexStringToNum(currAction->value);
-											unsigned int manipNum = neoParamVals.getParamValueNum();
+											unsigned int manipNum = currParamVals.getParamValueNum();
 											unsigned int temp = manipNum;
 											manipNum = manipNum >> incomingValNum;
 											temp = temp << (32 - incomingValNum);
 											manipNum |= temp;
-											neoParamVals.updateParamValue(manipNum);
+											currParamVals.updateParamValue(manipNum);
 
 											logOut << "[BIT_ROTATE_R]";
 											std::cout << "[BIT_ROTATE_R]";
@@ -1329,18 +1329,18 @@ namespace lava
 											if (hexStringToNum(currAction->value) >= 0)
 											{
 												actionOccured = 1;
-												neoParamVals.saveParamToContents();
-												neoParamVals = lava::paramTarget(*this, paramOffsetNum, lava::hexStringToNum(currAction->value));
+												currParamVals.saveParamToContents();
+												currParamVals = lava::paramTarget(*this, paramOffsetNum, lava::hexStringToNum(currAction->value));
 												logOut << "[TARGET_PARAM]\n";
 												std::cout << "[TARGET_PARAM]\n";
 												logOut << "\t\t\tParameter Redirect Triggered: New target is Param Index " << hexStringToNum(currAction->value) << "\n";
-												logOut << "\t\t\tParam Val: " << neoParamVals.getParamValueString();
+												logOut << "\t\t\tParam Val: " << currParamVals.getParamValueString();
 												std::cout << "\t\t\tParameter Redirect Triggered: New target is Param Index " << hexStringToNum(currAction->value) << "\n";
-												std::cout << "\t\t\tParam Val: " << neoParamVals.getParamValueString();
-												if (neoParamVals.getParamTypeNum() == lava::movesetParamTypes::varTy_SCLR)
+												std::cout << "\t\t\tParam Val: " << currParamVals.getParamValueString();
+												if (currParamVals.getParamTypeNum() == lava::movesetParamTypes::varTy_SCLR)
 												{
-													logOut << " (Scalar = " << neoParamVals.getParamValueNum() / lava::floatDenominator << ")";
-													std::cout << " (Scalar = " << neoParamVals.getParamValueNum() / lava::floatDenominator << ")";
+													logOut << " (Scalar = " << currParamVals.getParamValueNum() / lava::floatDenominator << ")";
+													std::cout << " (Scalar = " << currParamVals.getParamValueNum() / lava::floatDenominator << ")";
 												}
 												logOut << " (Redirected)\n";
 												std::cout << " (Redirected)\n";
@@ -1358,22 +1358,22 @@ namespace lava
 												{
 												case lava::movesetParamTypes::varTy_INT:
 												{
-													if (neoParamVals.getParamTypeNum() == lava::movesetParamTypes::varTy_SCLR)
+													if (currParamVals.getParamTypeNum() == lava::movesetParamTypes::varTy_SCLR)
 													{
-														unsigned int manipNum = neoParamVals.getParamValueNum();
+														unsigned int manipNum = currParamVals.getParamValueNum();
 														manipNum /= lava::floatDenominator;
-														neoParamVals.updateParamValue(manipNum);
+														currParamVals.updateParamValue(manipNum);
 													}
 													break;
 												}
 												case lava::movesetParamTypes::varTy_SCLR:
 												{
 													doScalarActionPrint = 1;
-													if (neoParamVals.getParamTypeNum() == lava::movesetParamTypes::varTy_INT)
+													if (currParamVals.getParamTypeNum() == lava::movesetParamTypes::varTy_INT)
 													{
-														unsigned int manipNum = neoParamVals.getParamValueNum();
+														unsigned int manipNum = currParamVals.getParamValueNum();
 														manipNum *= lava::floatDenominator;
-														neoParamVals.updateParamValue(manipNum);
+														currParamVals.updateParamValue(manipNum);
 													}
 													break;
 												}
@@ -1402,7 +1402,7 @@ namespace lava
 													break;
 												}
 												}
-												neoParamVals.updateParamType(incomingValNum);
+												currParamVals.updateParamType(incomingValNum);
 											}
 											else
 											{
@@ -1420,7 +1420,7 @@ namespace lava
 
 										if (actionOccured)
 										{
-											if (neoParamVals.getParamTypeNum() == lava::movesetParamTypes::varTy_SCLR || doScalarActionPrint)
+											if (currParamVals.getParamTypeNum() == lava::movesetParamTypes::varTy_SCLR || doScalarActionPrint)
 											{
 												logOut << " Value = " << currAction->value;
 												std::cout << " Value = " << currAction->value;
@@ -1428,13 +1428,13 @@ namespace lava
 												logOut << " (Scalar = " << incomingFlt << ")";
 												std::cout << " (Scalar = " << incomingFlt << ")";
 												float intermediateFlt = lava::hexStringToNum(intermediateParamValString) / lava::floatDenominator;
-												logOut << "\n\t\t\t\t" << intermediateParamValString << " (" << intermediateFlt << ") -> " << neoParamVals.getParamValueString() << " (" << neoParamVals.getParamValueNum() / lava::floatDenominator << ")\n";
-												std::cout << "\n\t\t\t\t" << intermediateParamValString << " (" << intermediateFlt << ") -> " << neoParamVals.getParamValueString() << " (" << neoParamVals.getParamValueNum() / lava::floatDenominator << ")\n";
+												logOut << "\n\t\t\t\t" << intermediateParamValString << " (" << intermediateFlt << ") -> " << currParamVals.getParamValueString() << " (" << currParamVals.getParamValueNum() / lava::floatDenominator << ")\n";
+												std::cout << "\n\t\t\t\t" << intermediateParamValString << " (" << intermediateFlt << ") -> " << currParamVals.getParamValueString() << " (" << currParamVals.getParamValueNum() / lava::floatDenominator << ")\n";
 											}
 											else
 											{
-												logOut << " Value = " << currAction->value << "\n\t\t\t\t" << intermediateParamValString << " -> " << neoParamVals.getParamValueString() << "\n";
-												std::cout << " Value = " << currAction->value << "\n\t\t\t\t" << intermediateParamValString << " -> " << neoParamVals.getParamValueString() << "\n";
+												logOut << " Value = " << currAction->value << "\n\t\t\t\t" << intermediateParamValString << " -> " << currParamVals.getParamValueString() << "\n";
+												std::cout << " Value = " << currAction->value << "\n\t\t\t\t" << intermediateParamValString << " -> " << currParamVals.getParamValueString() << "\n";
 											}
 										}
 										else
@@ -1448,32 +1448,32 @@ namespace lava
 									bool lockUsed = 0;
 									for (std::size_t i = 0; i < 8; i++)
 									{
-										std::string lockApplicationStr = neoParamVals.getParamValueString();
+										std::string lockApplicationStr = currParamVals.getParamValueString();
 										if (currMod->locked[i] == '1' && lockApplicationStr[i] != canonParamValString[i])
 										{
 											lockApplicationStr[i] = canonParamValString[i];
 											lockUsed = 1;
 										}
-										neoParamVals.updateParamValue(lockApplicationStr);
+										currParamVals.updateParamValue(lockApplicationStr);
 									}
 									// Only print the result of the lock operation if the value changed as a result of applying it.
 									if (lockUsed)
 									{
-										std::cout << "\t\t\tLock (" << currMod->locked << "): " << neoParamVals.getParamValueString() << "\n";
-										logOut << "\t\t\tLock (" << currMod->locked << "): " << neoParamVals.getParamValueString() << "\n";
+										std::cout << "\t\t\tLock (" << currMod->locked << "): " << currParamVals.getParamValueString() << "\n";
+										logOut << "\t\t\tLock (" << currMod->locked << "): " << currParamVals.getParamValueString() << "\n";
 									}
 
 									// Write result to contents.
-									neoParamVals.saveParamToContents();
+									currParamVals.saveParamToContents();
 
 									// Report results:
-									logOut << "\t\t\tFinal Value: " << contents.getBytes(4, neoParamVals.getParamOffsetNum() + neoParamVals.getParamIndexOffset() + 4, numGotten);
-									std::cout << "\t\t\tFinal Value: " << contents.getBytes(4, neoParamVals.getParamOffsetNum() + neoParamVals.getParamIndexOffset() + 4, numGotten);
+									logOut << "\t\t\tFinal Value: " << contents.getBytes(4, currParamVals.getParamOffsetNum() + currParamVals.getParamIndexOffset() + 4, numGotten);
+									std::cout << "\t\t\tFinal Value: " << contents.getBytes(4, currParamVals.getParamOffsetNum() + currParamVals.getParamIndexOffset() + 4, numGotten);
 									// Do scalar report if necessary
-									if (neoParamVals.getParamTypeNum() == lava::movesetParamTypes::varTy_SCLR || doScalarFinalPrint)
+									if (currParamVals.getParamTypeNum() == lava::movesetParamTypes::varTy_SCLR || doScalarFinalPrint)
 									{
-										logOut << " (Scalar = " << neoParamVals.getParamValueNum() / lava::floatDenominator << ")";
-										std::cout << " (Scalar = " << neoParamVals.getParamValueNum() / lava::floatDenominator << ")";
+										logOut << " (Scalar = " << currParamVals.getParamValueNum() / lava::floatDenominator << ")";
+										std::cout << " (Scalar = " << currParamVals.getParamValueNum() / lava::floatDenominator << ")";
 									}
 									logOut << "\n";
 									std::cout << "\n";
