@@ -11,6 +11,68 @@ namespace lava
 	constexpr std::size_t globalBaseOffset = 0x80;
 	constexpr float floatDenominator = 0xEA60;
 	const std::string changelogSuffix = "_changelog.txt";
+
+	enum movesetParamTypes
+	{
+		varTy_INT = 0,
+		varTy_SCLR,
+		varTy_PNTR,
+		varTy_BOOL,
+		varTy_4,
+		varTy_VAR,
+		varTy_REQ,
+		variableTypeCount
+	};
+	enum modActionTypes
+	{
+		actTy_NULL = -1,
+		// Simple Block
+		actTy_DO_NOTHING = 0x00,
+		actTy_REPLACE,
+		// A is for Arithmetic
+		actTy_INT_ADD = 0xA0,
+		actTy_INT_SUB,
+		actTy_INT_MUL,
+		actTy_INT_DIV,
+		actTy_FLT_ADD,
+		actTy_FLT_SUB,
+		actTy_FLT_MUL,
+		actTy_FLT_DIV,
+		// B is for Bit Manipulation
+		actTy_BIT_AND = 0xB0,
+		actTy_BIT_OR,
+		actTy_BIT_XOR,
+		actTy_BIT_SHIFT_L,
+		actTy_BIT_SHIFT_R,
+		actTy_BIT_ROTATE_L,
+		actTy_BIT_ROTATE_R,
+		// C is for CAUTION
+		// You should't ever need to do this, use mod redirects isntead
+		actTy_RETARGET_PARAM = 0xC0,
+		actTy_CONVERT_PARAM,
+		//neo_actTy_SWAP_PARAMS,
+	};
+	enum matchEvaluationMethodTypes
+	{
+		mtEvl_EQUALS = 0,
+		mtEvl_NOT_EQUALS,
+		mtEvl_GREATER,
+		mtEvl_GREATER_OE,
+		mtEvl_LESSER,
+		mtEvl_LESSER_OE,
+		mtEvl_BIT_AND,
+		mtEvl_BIT_XOR,
+		evaluationMethodCount
+	};
+	enum extraConditionTypes
+	{
+		exCon_NULL = 0,
+		exCon_AND_PREV_USED,
+		exCon_AND_PREV_NOT_USED,
+		exCon_OR_PREV_USED,
+		exCon_OR_PREV_NOT_USED,
+		extraConditionTypeCount
+	};
 	
 	std::string sanitizeHexStrInput(const std::string& stringIn, bool XAllowed = 0);
 	bool hexStrComp(const std::string& str1, const std::string& str2);
@@ -37,79 +99,16 @@ namespace lava
 		int paramIndex = INT_MAX;
 		int paramType = INT_MAX;
 	};
-	enum movesetParamTypes
-	{
-		varTy_INT = 0,
-		varTy_SCLR,
-		varTy_PNTR,
-		varTy_BOOL,
-		varTy_4,
-		varTy_VAR,
-		varTy_REQ,
-		variableTypeCount
-	};
-	enum modActionTypes
-	{
-		actTy_NULL = -1,
-		// Simple Block
-		actTy_DO_NOTHING = 0x00,
-		actTy_REPLACE,
-		// A is for Arithmetic
-		actTy_INT_ADD = 0xA0,
-		actTy_INT_SUB,
-		actTy_INT_MUL,
-		actTy_INT_DIV, 
-		actTy_FLT_ADD,
-		actTy_FLT_SUB,
-		actTy_FLT_MUL,
-		actTy_FLT_DIV,
-		// B is for Bit Manipulation
-		actTy_BIT_AND = 0xB0,
-		actTy_BIT_OR,
-		actTy_BIT_XOR,
-		actTy_BIT_SHIFT_L,
-		actTy_BIT_SHIFT_R,
-		actTy_BIT_ROTATE_L,
-		actTy_BIT_ROTATE_R,
-		// C is for CAUTION
-		// You should't ever need to do this, use mod redirects isntead
-		actTy_RETARGET_PARAM = 0xC0,
-		actTy_CONVERT_PARAM,
-		//neo_actTy_SWAP_PARAMS,
-	};
-	enum matchEvaluationMethod
-	{
-		mtEvl_EQUALS = 0,
-		mtEvl_NOT_EQUALS,
-		mtEvl_GREATER,
-		mtEvl_GREATER_OE,
-		mtEvl_LESSER,
-		mtEvl_LESSER_OE,
-		mtEvl_BIT_AND,
-		mtEvl_BIT_XOR,
-		evaluationMethodCount
-	};
-
 	struct movesetPatchModAction
 	{
 		int actionType = modActionTypes::actTy_NULL;
 		std::string value = "";
 	};
-
-	enum extraConditionTypes
-	{
-		exCon_NULL = 0,
-		exCon_AND_PREV_USED,
-		exCon_AND_PREV_NOT_USED,
-		exCon_OR_PREV_USED,
-		exCon_OR_PREV_NOT_USED,
-		extraConditionTypeCount
-	};
 	struct movesetPatchMod
 	{
 		std::string name = "";
 		std::string match = "FFFFFFFF";
-		int matchMethod = matchEvaluationMethod::mtEvl_EQUALS;
+		int matchMethod = matchEvaluationMethodTypes::mtEvl_EQUALS;
 		std::string locked = "00000000";
 		int paramIndexRedirect = INT_MAX;
 		int extraCondition = extraConditionTypes::exCon_NULL;

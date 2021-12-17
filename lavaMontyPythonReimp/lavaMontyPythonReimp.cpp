@@ -170,7 +170,7 @@ namespace lava
 										currMod.matchMethod = patchModAttr.as_int(INT_MAX);
 										if (currMod.matchMethod < 0)
 										{
-											currMod.matchMethod = lava::matchEvaluationMethod::mtEvl_EQUALS;
+											currMod.matchMethod = lava::matchEvaluationMethodTypes::mtEvl_EQUALS;
 										}
 									}
 								}
@@ -690,42 +690,42 @@ namespace lava
 								// Actually evaluate the various methods.
 								switch (currMod->matchMethod)
 								{
-									case lava::matchEvaluationMethod::mtEvl_EQUALS:
+									case lava::matchEvaluationMethodTypes::mtEvl_EQUALS:
 									{
 										matchEvalRes = hexStrComp(tempEvalStr, currParamVals.getParamValueString());
 										break;
 									}
-									case lava::matchEvaluationMethod::mtEvl_NOT_EQUALS:
+									case lava::matchEvaluationMethodTypes::mtEvl_NOT_EQUALS:
 									{
 										matchEvalRes = !hexStrComp(tempEvalStr, currParamVals.getParamValueString());
 										break;
 									}
-									case lava::matchEvaluationMethod::mtEvl_GREATER:
+									case lava::matchEvaluationMethodTypes::mtEvl_GREATER:
 									{
 										matchEvalRes = lava::hexStringToNum(tempEvalStr) > currParamVals.getParamValueNum();
 										break;
 									}
-									case lava::matchEvaluationMethod::mtEvl_GREATER_OE:
+									case lava::matchEvaluationMethodTypes::mtEvl_GREATER_OE:
 									{
 										matchEvalRes = lava::hexStringToNum(tempEvalStr) >= currParamVals.getParamValueNum();
 										break;
 									}
-									case lava::matchEvaluationMethod::mtEvl_LESSER:
+									case lava::matchEvaluationMethodTypes::mtEvl_LESSER:
 									{
 										matchEvalRes = lava::hexStringToNum(tempEvalStr) < currParamVals.getParamValueNum();
 										break;
 									}
-									case lava::matchEvaluationMethod::mtEvl_LESSER_OE:
+									case lava::matchEvaluationMethodTypes::mtEvl_LESSER_OE:
 									{
 										matchEvalRes = lava::hexStringToNum(tempEvalStr) <= currParamVals.getParamValueNum();
 										break;
 									}
-									case lava::matchEvaluationMethod::mtEvl_BIT_AND:
+									case lava::matchEvaluationMethodTypes::mtEvl_BIT_AND:
 									{
 										matchEvalRes = lava::hexStringToNum(tempEvalStr) & currParamVals.getParamValueNum();
 										break;
 									}
-									case lava::matchEvaluationMethod::mtEvl_BIT_XOR:
+									case lava::matchEvaluationMethodTypes::mtEvl_BIT_XOR:
 									{
 										matchEvalRes = lava::hexStringToNum(tempEvalStr) ^ currParamVals.getParamValueNum();
 										break;
@@ -788,49 +788,49 @@ namespace lava
 									std::cout << "\t\tFound match (Match:" << currMod->match << " ";
 									switch (currMod->matchMethod)
 									{
-										case lava::matchEvaluationMethod::mtEvl_EQUALS:
+										case lava::matchEvaluationMethodTypes::mtEvl_EQUALS:
 										{
 											std::cout << "==";
 											logStream << "==";
 											break;
 										}
-										case lava::matchEvaluationMethod::mtEvl_NOT_EQUALS:
+										case lava::matchEvaluationMethodTypes::mtEvl_NOT_EQUALS:
 										{
 											std::cout << "!=";
 											logStream << "!=";
 											break;
 										}
-										case lava::matchEvaluationMethod::mtEvl_GREATER:
+										case lava::matchEvaluationMethodTypes::mtEvl_GREATER:
 										{
 											std::cout << ">";
 											logStream << ">";
 											break;
 										}
-										case lava::matchEvaluationMethod::mtEvl_GREATER_OE:
+										case lava::matchEvaluationMethodTypes::mtEvl_GREATER_OE:
 										{
 											std::cout << ">=";
 											logStream << ">=";
 											break;
 										}
-										case lava::matchEvaluationMethod::mtEvl_LESSER:
+										case lava::matchEvaluationMethodTypes::mtEvl_LESSER:
 										{
 											std::cout << "<";
 											logStream << "<";
 											break;
 										}
-										case lava::matchEvaluationMethod::mtEvl_LESSER_OE:
+										case lava::matchEvaluationMethodTypes::mtEvl_LESSER_OE:
 										{
 											std::cout << "<=";
 											logStream << "<=";
 											break;
 										}
-										case lava::matchEvaluationMethod::mtEvl_BIT_AND:
+										case lava::matchEvaluationMethodTypes::mtEvl_BIT_AND:
 										{
 											std::cout << "&";
 											logStream << "&";
 											break;
 										}
-										case lava::matchEvaluationMethod::mtEvl_BIT_XOR:
+										case lava::matchEvaluationMethodTypes::mtEvl_BIT_XOR:
 										{
 											std::cout << "^";
 											logStream << "^";
