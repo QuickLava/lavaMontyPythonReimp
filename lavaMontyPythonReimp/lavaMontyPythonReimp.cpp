@@ -1205,7 +1205,7 @@ namespace lava
 											actionOccured = 1;
 											doScalarActionPrint = 1;
 
-											unsigned int incomingValNum = hexStringToNum(currAction->value);
+											float incomingValNum = hexStringToNum(currAction->value) / lava::floatDenominator;
 											unsigned int manipNum = currParamVals.getParamValueNum();
 											manipNum *= incomingValNum;
 											currParamVals.updateParamValue(manipNum);
@@ -1219,7 +1219,7 @@ namespace lava
 											actionOccured = 1;
 											doScalarActionPrint = 1;
 
-											unsigned int incomingValNum = hexStringToNum(currAction->value);
+											float incomingValNum = hexStringToNum(currAction->value) / lava::floatDenominator;
 											unsigned int manipNum = currParamVals.getParamValueNum();
 											manipNum /= incomingValNum;
 											currParamVals.updateParamValue(manipNum);
