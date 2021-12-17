@@ -120,8 +120,10 @@ namespace lava
 	enum extraConditionTypes
 	{
 		exCon_NULL = 0,
-		exCon_PREV_USED,
-		exCon_PREV_NOT_USED,
+		exCon_AND_PREV_USED,
+		exCon_AND_PREV_NOT_USED,
+		exCon_OR_PREV_USED,
+		exCon_OR_PREV_NOT_USED,
 		extraConditionTypeCount
 	};
 	struct movesetPatchMod

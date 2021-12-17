@@ -956,30 +956,37 @@ namespace lava
 									}
 								}
 
-								// Initiate extra condition evaluation result variable
-								bool extraConditionRes = 0;
 								// Evaluate status of specified condition.
 								switch (currMod->extraCondition)
 								{
-									case lava::extraConditionTypes::exCon_PREV_USED:
+									case lava::extraConditionTypes::exCon_AND_PREV_USED:
 									{
-										extraConditionRes = previousModUsed;
+										matchEvalRes &= previousModUsed;
 										break;
 									}
-									case lava::extraConditionTypes::exCon_PREV_NOT_USED:
+									case lava::extraConditionTypes::exCon_AND_PREV_NOT_USED:
 									{
-										extraConditionRes = !previousModUsed;
+										matchEvalRes &= !previousModUsed;
+										break;
+									}
+									case lava::extraConditionTypes::exCon_OR_PREV_USED:
+									{
+										matchEvalRes |= previousModUsed;
+										break;
+									}
+									case lava::extraConditionTypes::exCon_OR_PREV_NOT_USED:
+									{
+										matchEvalRes |= !previousModUsed;
 										break;
 									}
 									default:
 									{
-										extraConditionRes = 1;
 										break;
 									}
 								}
 
-								// If both the match and extra condition evaluated to true, continue with applying any actions.
-								if (matchEvalRes && extraConditionRes)
+								// If after processing the match evaluation method (and the extra condition if it one was given), continue with applying any actions.
+								if (matchEvalRes)
 								{
 									// Record that the modification was used and report it to the console.
 									matchFound = 1;
@@ -1062,13 +1069,13 @@ namespace lava
 										logStream << "\t\tExtra Condition also met:";
 										switch (currMod->extraCondition)
 										{
-										case lava::extraConditionTypes::exCon_PREV_USED:
+										case lava::extraConditionTypes::exCon_AND_PREV_USED:
 										{
 											std::cout << " [REQ_PREV]\n";
 											logStream << " [REQ_PREV]\n";
 											break;
 										}
-										case lava::extraConditionTypes::exCon_PREV_NOT_USED:
+										case lava::extraConditionTypes::exCon_AND_PREV_NOT_USED:
 										{
 											std::cout << " [REQ_NOT_PREV]\n";
 											logStream << " [REQ_NOT_PREV]\n";
