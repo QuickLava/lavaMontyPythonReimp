@@ -190,9 +190,11 @@ namespace lava
 				{
 					if (patchChild.name() == "targets")
 					{
+						std::size_t targetNumber = 0;
 						for (pugi::xml_node patchTarget = patchChild.first_child(); patchTarget; patchTarget = patchTarget.next_sibling())
 						{
 							movesetPatchTarget currTarget;
+							currTarget.name = "Target #" + std::to_string(targetNumber);
 							for (pugi::xml_attribute targetAttr = patchTarget.first_attribute(); targetAttr; targetAttr = targetAttr.next_attribute())
 							{
 								if (targetAttr.name() == "name")
@@ -237,6 +239,7 @@ namespace lava
 							{
 								std::cerr << "[ERROR] Error in parsing param index for Target \"" << currTarget.name << "\" in moveset patch XML (" << fileIn << ").\n Ensure that this value is a positive integer value.\n" ;
 							}
+							targetNumber++;
 						}
 					}
 					else if (patchChild.name() == "modifications")
