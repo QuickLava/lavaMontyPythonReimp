@@ -1,5 +1,4 @@
 <?xml version="1.0"?> 
-
 <movesetPatch name = "Marth Slap Tipper Chain Test">
 	<targets>
 		<command name = "Offensive Collision" signature = "0x06000D00" paramIndex="0"/>
@@ -10,19 +9,17 @@
 		</mod>
 		<mod match = "000493E0" extraCondition = "1" evalMethod = "5" paramIndexRedirect = "8">
 		</mod>
-		<mod match = "XXXX000D" extraCondition = "1" evalMethod = "5" paramIndexRedirect = "1">
-		</mod>
 		<mod match = "XXXXXXXX" extraCondition = "1" lock = "11111100" paramIndexRedirect = "12">
 			<action type = "0xB0" value = "FFFFFFE0"/>
 		</mod>
 		<mod match = "XXXXXXXX" extraCondition = "1" lock = "11111100" paramIndexRedirect = "12">
-			<action type = "0xB1" value = "00000002"/>
+			<action type = "0xB1" value = "00000006"/>
 		</mod>
 		<mod match = "XXXXXXXX" extraCondition = "1" lock = "11110011" paramIndexRedirect = "12">
 			<action type = "0xB0" value = "FFFFC1FF"/>
 		</mod>
 		<mod match = "XXXXXXXX" extraCondition = "1" lock = "11110011" paramIndexRedirect = "12">
-			<action type = "0xB1" value = "00002400"/>
+			<action type = "0xB1" value = "00000800"/>
 		</mod>
 		<mod match = "XXXXXXXX" extraCondition = "1" paramIndexRedirect = "4" lock = "00001111">
 			<action type = "0xA0" value = "00010000"/>

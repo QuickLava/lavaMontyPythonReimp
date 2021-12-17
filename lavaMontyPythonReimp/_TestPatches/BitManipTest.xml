@@ -1,0 +1,20 @@
+<?xml version="1.0"?> 
+<movesetPatch name = "Bit Manip Test">
+	<targets>
+		<command name = "Graphic Effect" signature = "0x11001000" paramIndex="0"/>
+		<command name = "Graphic Effect (Attached)" signature = "0x11010A00" paramIndex="0"/>
+	</targets>
+	<modifications>
+		<mod match = "0000XXXX" evalMethod = "1" lock = "11111111">
+			<action type = "0xB2" value = "FFFFFFFF"/>
+			<action type = "0xB2" value = "FFFFFFFF"/>
+			<action type = "0xB1" value = "0A000000"/>
+			<action type = "0xB0" value = "F5FFFFFF"/>
+			<action type = "0xB0" value = "FFFFFFFF"/>
+			<action type = "0xB5" value = "00000004"/>
+			<action type = "0xB6" value = "00000004"/>
+			<action type = "0xB3" value = "00000004"/>
+			<action type = "0xB4" value = "00000004"/>
+		</mod>
+	</modifications>
+</movesetPatch>
