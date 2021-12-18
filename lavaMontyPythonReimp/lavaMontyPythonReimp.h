@@ -71,6 +71,8 @@ namespace lava
 		exCon_AND_PREV_NOT_USED,
 		exCon_OR_PREV_USED,
 		exCon_OR_PREV_NOT_USED,
+		exCon_XOR_PREV_USED,
+		exCon_XOR_PREV_NOT_USED,
 		extraConditionTypeCount
 	};
 	
@@ -101,6 +103,7 @@ namespace lava
 	};
 	struct movesetPatchModAction
 	{
+		std::string name = "";
 		int actionType = modActionTypes::actTy_NULL;
 		std::string value = "";
 	};

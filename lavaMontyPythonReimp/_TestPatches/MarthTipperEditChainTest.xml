@@ -7,7 +7,7 @@
 	<modifications>
 		<mod match = "0041XXXX">
 		</mod>
-		<mod match = "000493E0" extraCondition = "1" evalMethod = "5" paramIndexRedirect = "8">
+		<mod match = "000493E0" extraCondition = "1" evalMethod = "3" paramIndexRedirect = "8">
 		</mod>
 		<mod match = "XXXXXXXX" extraCondition = "1" lock = "11111100" paramIndexRedirect = "12">
 			<action type = "0xB0" value = "FFFFFFE0"/>

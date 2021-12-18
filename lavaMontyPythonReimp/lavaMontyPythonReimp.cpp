@@ -196,12 +196,18 @@ namespace lava
 									}
 								}
 							}
+							std::size_t actionNumber = 0;
 							for (pugi::xml_node modAction = patchModification.first_child(); modAction; modAction = modAction.next_sibling())
 							{
 								movesetPatchModAction currAction;
+								currAction.name = "Action #" + std::to_string(actionNumber);
 								for (pugi::xml_attribute actionAttr = modAction.first_attribute(); actionAttr; actionAttr = actionAttr.next_attribute())
 								{
-									if (actionAttr.name() == "type")
+									if (actionAttr.name() == "name")
+									{
+										currAction.name = actionAttr.as_string();
+									}
+									else if (actionAttr.name() == "type")
 									{
 										std::string manipStr = actionAttr.as_string();
 										if (manipStr.find("0x") == 0)
@@ -224,6 +230,7 @@ namespace lava
 									}
 								}
 								currMod.actions.push_back(currAction);
+								actionNumber++;
 							}
 							modNumber++;
 							currPatch.modifications.push_back(currMod);
@@ -293,6 +300,7 @@ namespace lava
 									std::size_t entryNum = 0;
 									while (std::getline(entryStream, manipStr))
 									{
+										// Erase all instances of tabs and spaces from the string
 										manipStr.erase(std::remove(manipStr.begin(), manipStr.end(), '\t'), manipStr.end());
 										manipStr.erase(std::remove(manipStr.begin(), manipStr.end(), ' '), manipStr.end());
 										if (manipStr.size())
@@ -598,6 +606,7 @@ namespace lava
 			const movesetPatchTarget* currTarget = &patchIn.targets[targetItr];
 			std::cout << "\"" << currTarget->name << "\" [0x" << lava::hexVecToHexStringWithPadding(currTarget->signature, lava::canonParamLengthStr) << "] (Param " << currTarget->paramIndex;
 			logStream << "\"" << currTarget->name << "\" [0x" << lava::hexVecToHexStringWithPadding(currTarget->signature, lava::canonParamLengthStr) << "] (Param " << currTarget->paramIndex;
+			// If a paramType was specified, report it
 			if (currTarget->paramType != INT_MAX)
 			{
 				std::cout << ", of Type " << currTarget->paramType;
@@ -679,12 +688,12 @@ namespace lava
 								// Initiate match evaluation result variable
 								bool matchEvalRes = 0;
 								// Build the version of the match string we'll be using. This just replaces any passthrough chars ('X's) with the digit in the corresponding slot of the target param, ensuring they're equal.
-								std::string tempEvalStr = currMod->match;
-								for (std::size_t i = 0; i < tempEvalStr.size(); i++)
+								std::string tempMatchEvalStr = currMod->match;
+								for (std::size_t i = 0; i < tempMatchEvalStr.size(); i++)
 								{
-									if (tempEvalStr[i] == 'X')
+									if (tempMatchEvalStr[i] == 'X')
 									{
-										tempEvalStr[i] = currParamVals.getParamValueString()[i];
+										tempMatchEvalStr[i] = currParamVals.getParamValueString()[i];
 									}
 								}
 								// Actually evaluate the various methods.
@@ -692,42 +701,42 @@ namespace lava
 								{
 									case lava::matchEvaluationMethodTypes::mtEvl_EQUALS:
 									{
-										matchEvalRes = hexStrComp(tempEvalStr, currParamVals.getParamValueString());
+										matchEvalRes = hexStrComp(tempMatchEvalStr, currParamVals.getParamValueString());
 										break;
 									}
 									case lava::matchEvaluationMethodTypes::mtEvl_NOT_EQUALS:
 									{
-										matchEvalRes = !hexStrComp(tempEvalStr, currParamVals.getParamValueString());
+										matchEvalRes = !hexStrComp(tempMatchEvalStr, currParamVals.getParamValueString());
 										break;
 									}
 									case lava::matchEvaluationMethodTypes::mtEvl_GREATER:
 									{
-										matchEvalRes = lava::hexStringToNum(tempEvalStr) > currParamVals.getParamValueNum();
+										matchEvalRes = lava::hexStringToNum(tempMatchEvalStr) < currParamVals.getParamValueNum();
 										break;
 									}
 									case lava::matchEvaluationMethodTypes::mtEvl_GREATER_OE:
 									{
-										matchEvalRes = lava::hexStringToNum(tempEvalStr) >= currParamVals.getParamValueNum();
+										matchEvalRes = lava::hexStringToNum(tempMatchEvalStr) <= currParamVals.getParamValueNum();
 										break;
 									}
 									case lava::matchEvaluationMethodTypes::mtEvl_LESSER:
 									{
-										matchEvalRes = lava::hexStringToNum(tempEvalStr) < currParamVals.getParamValueNum();
+										matchEvalRes = lava::hexStringToNum(tempMatchEvalStr) > currParamVals.getParamValueNum();
 										break;
 									}
 									case lava::matchEvaluationMethodTypes::mtEvl_LESSER_OE:
 									{
-										matchEvalRes = lava::hexStringToNum(tempEvalStr) <= currParamVals.getParamValueNum();
+										matchEvalRes = lava::hexStringToNum(tempMatchEvalStr) >= currParamVals.getParamValueNum();
 										break;
 									}
 									case lava::matchEvaluationMethodTypes::mtEvl_BIT_AND:
 									{
-										matchEvalRes = lava::hexStringToNum(tempEvalStr) & currParamVals.getParamValueNum();
+										matchEvalRes = lava::hexStringToNum(tempMatchEvalStr) & currParamVals.getParamValueNum();
 										break;
 									}
 									case lava::matchEvaluationMethodTypes::mtEvl_BIT_XOR:
 									{
-										matchEvalRes = lava::hexStringToNum(tempEvalStr) ^ currParamVals.getParamValueNum();
+										matchEvalRes = lava::hexStringToNum(tempMatchEvalStr) ^ currParamVals.getParamValueNum();
 										break;
 									}
 									default:
@@ -758,6 +767,16 @@ namespace lava
 									case lava::extraConditionTypes::exCon_OR_PREV_NOT_USED:
 									{
 										matchEvalRes |= !previousModUsed;
+										break;
+									}
+									case lava::extraConditionTypes::exCon_XOR_PREV_USED:
+									{
+										matchEvalRes ^= previousModUsed;
+										break;
+									}
+									case lava::extraConditionTypes::exCon_XOR_PREV_NOT_USED:
+									{
+										matchEvalRes ^= !previousModUsed;
 										break;
 									}
 									default:
@@ -852,14 +871,38 @@ namespace lava
 										{
 										case lava::extraConditionTypes::exCon_AND_PREV_USED:
 										{
-											std::cout << " [REQ_PREV]\n";
-											logStream << " [REQ_PREV]\n";
+											std::cout << " [AND_PREV]\n";
+											logStream << " [AND_PREV]\n";
 											break;
 										}
 										case lava::extraConditionTypes::exCon_AND_PREV_NOT_USED:
 										{
-											std::cout << " [REQ_NOT_PREV]\n";
-											logStream << " [REQ_NOT_PREV]\n";
+											std::cout << " [AND_NOT_PREV]\n";
+											logStream << " [AND_NOT_PREV]\n";
+											break;
+										}
+										case lava::extraConditionTypes::exCon_OR_PREV_USED:
+										{
+											std::cout << " [OR_PREV]\n";
+											logStream << " [OR_PREV]\n";
+											break;
+										}
+										case lava::extraConditionTypes::exCon_OR_PREV_NOT_USED:
+										{
+											std::cout << " [OR_NOT_PREV]\n";
+											logStream << " [OR_NOT_PREV]\n";
+											break;
+										}
+										case lava::extraConditionTypes::exCon_XOR_PREV_USED:
+										{
+											std::cout << " [XOR_PREV]\n";
+											logStream << " [XOR_PREV]\n";
+											break;
+										}
+										case lava::extraConditionTypes::exCon_XOR_PREV_NOT_USED:
+										{
+											std::cout << " [XOR_NOT_PREV]\n";
+											logStream << " [XOR_NOT_PREV]\n";
 											break;
 										}
 										default:
@@ -885,326 +928,328 @@ namespace lava
 										doScalarActionPrint = 0;
 										doScalarFinalPrint = 0;
 
-										// Do changelog reporting
-										logStream << "\t\t\tAction #" << actionItr << ": ";
-										std::cout << "\t\t\tAction #" << actionItr << ": ";
+										// Store a pointer to the current action
 										currAction = &currMod->actions[actionItr];
+
+										// Do changelog reporting
+										logStream << "\t\t\t\"" << currAction->name << "\": ";
+										std::cout << "\t\t\t\"" << currAction->name << "\": ";
 										// Perform the appropriate changes based on the type of action
 										switch (currAction->actionType)
 										{
-										case modActionTypes::actTy_DO_NOTHING:
-										{
-											logStream << "[NOP]";
-											std::cout << "[NOP]";
-											break;
-										}
-										case modActionTypes::actTy_REPLACE:
-										{
-											actionOccured = 1;
-
-											currParamVals.updateParamValue(currAction->value);
-
-											logStream << "[REP]";
-											std::cout << "[REP]";
-											break;
-										}
-										case modActionTypes::actTy_INT_ADD:
-										{
-											actionOccured = 1;
-
-											unsigned int incomingValNum = hexStringToNum(currAction->value);
-											unsigned int manipNum = currParamVals.getParamValueNum();
-											manipNum += incomingValNum;
-											currParamVals.updateParamValue(manipNum);
-
-											logStream << "[INT_ADD]";
-											std::cout << "[INT_ADD]";
-											break;
-										}
-										case modActionTypes::actTy_INT_SUB:
-										{
-											actionOccured = 1;
-
-											unsigned int incomingValNum = hexStringToNum(currAction->value);
-											unsigned int manipNum = currParamVals.getParamValueNum();
-											manipNum -= incomingValNum;
-											currParamVals.updateParamValue(manipNum);
-
-											logStream << "[INT_SUB]";
-											std::cout << "[INT_SUB]";
-											break;
-										}
-										case modActionTypes::actTy_INT_MUL:
-										{
-											actionOccured = 1;
-
-											unsigned int incomingValNum = hexStringToNum(currAction->value);
-											unsigned int manipNum = currParamVals.getParamValueNum();
-											manipNum *= incomingValNum;
-											currParamVals.updateParamValue(manipNum);
-
-											logStream << "[INT_MUL]";
-											std::cout << "[INT_MUL]";
-											break;
-										}
-										case modActionTypes::actTy_INT_DIV:
-										{
-											actionOccured = 1;
-
-											unsigned int incomingValNum = hexStringToNum(currAction->value);
-											unsigned int manipNum = currParamVals.getParamValueNum();
-											manipNum /= incomingValNum;
-											currParamVals.updateParamValue(manipNum);
-
-											logStream << "[INT_DIV]";
-											std::cout << "[INT_DIV]";
-											break;
-										}
-										case modActionTypes::actTy_FLT_ADD:
-										{
-											actionOccured = 1;
-											doScalarActionPrint = 1;
-
-											unsigned int incomingValNum = hexStringToNum(currAction->value);
-											unsigned int manipNum = currParamVals.getParamValueNum();
-											manipNum += incomingValNum;
-											currParamVals.updateParamValue(manipNum);
-
-											logStream << "[FLT_ADD]";
-											std::cout << "[FLT_ADD]";
-											break;
-										}
-										case modActionTypes::actTy_FLT_SUB:
-										{
-											actionOccured = 1;
-											doScalarActionPrint = 1;
-
-											unsigned int incomingValNum = hexStringToNum(currAction->value);
-											unsigned int manipNum = currParamVals.getParamValueNum();
-											manipNum -= incomingValNum;
-											currParamVals.updateParamValue(manipNum);
-
-											logStream << "[FLT_SUB]";
-											std::cout << "[FLT_SUB]";
-											break;
-										}
-										case modActionTypes::actTy_FLT_MUL:
-										{
-											actionOccured = 1;
-											doScalarActionPrint = 1;
-
-											float incomingValNum = hexStringToNum(currAction->value) / lava::floatDenominator;
-											unsigned int manipNum = currParamVals.getParamValueNum();
-											manipNum *= incomingValNum;
-											currParamVals.updateParamValue(manipNum);
-
-											logStream << "[FLT_MUL]";
-											std::cout << "[FLT_MUL]";
-											break;
-										}
-										case modActionTypes::actTy_FLT_DIV:
-										{
-											actionOccured = 1;
-											doScalarActionPrint = 1;
-
-											float incomingValNum = hexStringToNum(currAction->value) / lava::floatDenominator;
-											unsigned int manipNum = currParamVals.getParamValueNum();
-											manipNum /= incomingValNum;
-											currParamVals.updateParamValue(manipNum);
-
-											logStream << "[FLT_DIV]";
-											std::cout << "[FLT_DIV]";
-											break;
-										}
-										case modActionTypes::actTy_BIT_AND:
-										{
-											actionOccured = 1;
-
-											unsigned int incomingValNum = hexStringToNum(currAction->value);
-											unsigned int manipNum = currParamVals.getParamValueNum();
-											manipNum &= incomingValNum;
-											currParamVals.updateParamValue(manipNum);
-
-											logStream << "[BIT_AND]";
-											std::cout << "[BIT_AND]";
-											break;
-										}
-										case modActionTypes::actTy_BIT_OR:
-										{
-											actionOccured = 1;
-
-											unsigned int incomingValNum = hexStringToNum(currAction->value);
-											unsigned int manipNum = currParamVals.getParamValueNum();
-											manipNum |= incomingValNum;
-											currParamVals.updateParamValue(manipNum);
-
-											logStream << "[BIT_OR]";
-											std::cout << "[BIT_OR]";
-											break;
-										}
-										case modActionTypes::actTy_BIT_XOR:
-										{
-											actionOccured = 1;
-
-											unsigned int incomingValNum = hexStringToNum(currAction->value);
-											unsigned int manipNum = currParamVals.getParamValueNum();
-											manipNum ^= incomingValNum;
-											currParamVals.updateParamValue(manipNum);
-
-											logStream << "[BIT_XOR]";
-											std::cout << "[BIT_XOR]";
-											break;
-										}
-										case modActionTypes::actTy_BIT_SHIFT_L:
-										{
-											actionOccured = 1;
-
-											unsigned int incomingValNum = hexStringToNum(currAction->value);
-											unsigned int manipNum = currParamVals.getParamValueNum();
-											manipNum = manipNum << incomingValNum;
-											currParamVals.updateParamValue(manipNum);
-
-											logStream << "[BIT_SHIFT_L]";
-											std::cout << "[BIT_SHIFT_L]";
-											break;
-										}
-										case modActionTypes::actTy_BIT_SHIFT_R:
-										{
-											actionOccured = 1;
-
-											unsigned int incomingValNum = hexStringToNum(currAction->value);
-											unsigned int manipNum = currParamVals.getParamValueNum();
-											manipNum = manipNum >> incomingValNum;
-											currParamVals.updateParamValue(manipNum);
-
-											logStream << "[BIT_SHIFT_R]";
-											std::cout << "[BIT_SHIFT_R]";
-											break;
-										}
-										case modActionTypes::actTy_BIT_ROTATE_L:
-										{
-											actionOccured = 1;
-
-											unsigned int incomingValNum = hexStringToNum(currAction->value);
-											unsigned int manipNum = currParamVals.getParamValueNum();
-											unsigned int temp = manipNum;
-											manipNum = manipNum << incomingValNum;
-											temp = temp >> (32 - incomingValNum);
-											manipNum |= temp;
-											currParamVals.updateParamValue(manipNum);
-
-											logStream << "[BIT_ROTATE_L]";
-											std::cout << "[BIT_ROTATE_L]";
-											break;
-										}
-										case modActionTypes::actTy_BIT_ROTATE_R:
-										{
-											actionOccured = 1;
-
-											unsigned int incomingValNum = hexStringToNum(currAction->value);
-											unsigned int manipNum = currParamVals.getParamValueNum();
-											unsigned int temp = manipNum;
-											manipNum = manipNum >> incomingValNum;
-											temp = temp << (32 - incomingValNum);
-											manipNum |= temp;
-											currParamVals.updateParamValue(manipNum);
-
-											logStream << "[BIT_ROTATE_R]";
-											std::cout << "[BIT_ROTATE_R]";
-											break;
-										}
-										case modActionTypes::actTy_RETARGET_PARAM:
-										{
-											if (hexStringToNum(currAction->value) >= 0)
+											case modActionTypes::actTy_DO_NOTHING:
+											{
+												logStream << "[NOP]";
+												std::cout << "[NOP]";
+												break;
+											}
+											case modActionTypes::actTy_REPLACE:
 											{
 												actionOccured = 1;
-												currParamVals.saveParamToContents();
-												currParamVals = lava::paramTarget(*this, paramOffsetNum, lava::hexStringToNum(currAction->value));
-												logStream << "[TARGET_PARAM]\n";
-												std::cout << "[TARGET_PARAM]\n";
-												logStream << "\t\t\tParameter Redirect Triggered: New target is Param Index " << hexStringToNum(currAction->value) << "\n";
-												logStream << "\t\t\tParam Val: " << currParamVals.getParamValueString();
-												std::cout << "\t\t\tParameter Redirect Triggered: New target is Param Index " << hexStringToNum(currAction->value) << "\n";
-												std::cout << "\t\t\tParam Val: " << currParamVals.getParamValueString();
-												if (currParamVals.getParamTypeNum() == lava::movesetParamTypes::varTy_SCLR)
-												{
-													logStream << " (Scalar = " << currParamVals.getParamValueNum() / lava::floatDenominator << ")";
-													std::cout << " (Scalar = " << currParamVals.getParamValueNum() / lava::floatDenominator << ")";
-												}
-												logStream << " (Redirected)\n";
-												std::cout << " (Redirected)\n";
+
+												currParamVals.updateParamValue(currAction->value);
+
+												logStream << "[REP]";
+												std::cout << "[REP]";
+												break;
 											}
-											break;
-										}
-										case modActionTypes::actTy_CONVERT_PARAM:
-										{
-											logStream << "[CONVERT_PARAM]";
-											std::cout << "[CONVERT_PARAM]";
-											unsigned int incomingValNum = lava::hexStringToNum(currAction->value);
-											if (incomingValNum < lava::movesetParamTypes::variableTypeCount)
+											case modActionTypes::actTy_INT_ADD:
 											{
-												switch (incomingValNum)
+												actionOccured = 1;
+
+												unsigned int incomingValNum = hexStringToNum(currAction->value);
+												unsigned int manipNum = currParamVals.getParamValueNum();
+												manipNum += incomingValNum;
+												currParamVals.updateParamValue(manipNum);
+
+												logStream << "[INT_ADD]";
+												std::cout << "[INT_ADD]";
+												break;
+											}
+											case modActionTypes::actTy_INT_SUB:
+											{
+												actionOccured = 1;
+
+												unsigned int incomingValNum = hexStringToNum(currAction->value);
+												unsigned int manipNum = currParamVals.getParamValueNum();
+												manipNum -= incomingValNum;
+												currParamVals.updateParamValue(manipNum);
+
+												logStream << "[INT_SUB]";
+												std::cout << "[INT_SUB]";
+												break;
+											}
+											case modActionTypes::actTy_INT_MUL:
+											{
+												actionOccured = 1;
+
+												unsigned int incomingValNum = hexStringToNum(currAction->value);
+												unsigned int manipNum = currParamVals.getParamValueNum();
+												manipNum *= incomingValNum;
+												currParamVals.updateParamValue(manipNum);
+
+												logStream << "[INT_MUL]";
+												std::cout << "[INT_MUL]";
+												break;
+											}
+											case modActionTypes::actTy_INT_DIV:
+											{
+												actionOccured = 1;
+
+												unsigned int incomingValNum = hexStringToNum(currAction->value);
+												unsigned int manipNum = currParamVals.getParamValueNum();
+												manipNum /= incomingValNum;
+												currParamVals.updateParamValue(manipNum);
+
+												logStream << "[INT_DIV]";
+												std::cout << "[INT_DIV]";
+												break;
+											}
+											case modActionTypes::actTy_FLT_ADD:
+											{
+												actionOccured = 1;
+												doScalarActionPrint = 1;
+
+												unsigned int incomingValNum = hexStringToNum(currAction->value);
+												unsigned int manipNum = currParamVals.getParamValueNum();
+												manipNum += incomingValNum;
+												currParamVals.updateParamValue(manipNum);
+
+												logStream << "[FLT_ADD]";
+												std::cout << "[FLT_ADD]";
+												break;
+											}
+											case modActionTypes::actTy_FLT_SUB:
+											{
+												actionOccured = 1;
+												doScalarActionPrint = 1;
+
+												unsigned int incomingValNum = hexStringToNum(currAction->value);
+												unsigned int manipNum = currParamVals.getParamValueNum();
+												manipNum -= incomingValNum;
+												currParamVals.updateParamValue(manipNum);
+
+												logStream << "[FLT_SUB]";
+												std::cout << "[FLT_SUB]";
+												break;
+											}
+											case modActionTypes::actTy_FLT_MUL:
+											{
+												actionOccured = 1;
+												doScalarActionPrint = 1;
+
+												float incomingValNum = hexStringToNum(currAction->value) / lava::floatDenominator;
+												unsigned int manipNum = currParamVals.getParamValueNum();
+												manipNum *= incomingValNum;
+												currParamVals.updateParamValue(manipNum);
+
+												logStream << "[FLT_MUL]";
+												std::cout << "[FLT_MUL]";
+												break;
+											}
+											case modActionTypes::actTy_FLT_DIV:
+											{
+												actionOccured = 1;
+												doScalarActionPrint = 1;
+
+												float incomingValNum = hexStringToNum(currAction->value) / lava::floatDenominator;
+												unsigned int manipNum = currParamVals.getParamValueNum();
+												manipNum /= incomingValNum;
+												currParamVals.updateParamValue(manipNum);
+
+												logStream << "[FLT_DIV]";
+												std::cout << "[FLT_DIV]";
+												break;
+											}
+											case modActionTypes::actTy_BIT_AND:
+											{
+												actionOccured = 1;
+
+												unsigned int incomingValNum = hexStringToNum(currAction->value);
+												unsigned int manipNum = currParamVals.getParamValueNum();
+												manipNum &= incomingValNum;
+												currParamVals.updateParamValue(manipNum);
+
+												logStream << "[BIT_AND]";
+												std::cout << "[BIT_AND]";
+												break;
+											}
+											case modActionTypes::actTy_BIT_OR:
+											{
+												actionOccured = 1;
+
+												unsigned int incomingValNum = hexStringToNum(currAction->value);
+												unsigned int manipNum = currParamVals.getParamValueNum();
+												manipNum |= incomingValNum;
+												currParamVals.updateParamValue(manipNum);
+
+												logStream << "[BIT_OR]";
+												std::cout << "[BIT_OR]";
+												break;
+											}
+											case modActionTypes::actTy_BIT_XOR:
+											{
+												actionOccured = 1;
+
+												unsigned int incomingValNum = hexStringToNum(currAction->value);
+												unsigned int manipNum = currParamVals.getParamValueNum();
+												manipNum ^= incomingValNum;
+												currParamVals.updateParamValue(manipNum);
+
+												logStream << "[BIT_XOR]";
+												std::cout << "[BIT_XOR]";
+												break;
+											}
+											case modActionTypes::actTy_BIT_SHIFT_L:
+											{
+												actionOccured = 1;
+
+												unsigned int incomingValNum = hexStringToNum(currAction->value);
+												unsigned int manipNum = currParamVals.getParamValueNum();
+												manipNum = manipNum << incomingValNum;
+												currParamVals.updateParamValue(manipNum);
+
+												logStream << "[BIT_SHIFT_L]";
+												std::cout << "[BIT_SHIFT_L]";
+												break;
+											}
+											case modActionTypes::actTy_BIT_SHIFT_R:
+											{
+												actionOccured = 1;
+
+												unsigned int incomingValNum = hexStringToNum(currAction->value);
+												unsigned int manipNum = currParamVals.getParamValueNum();
+												manipNum = manipNum >> incomingValNum;
+												currParamVals.updateParamValue(manipNum);
+
+												logStream << "[BIT_SHIFT_R]";
+												std::cout << "[BIT_SHIFT_R]";
+												break;
+											}
+											case modActionTypes::actTy_BIT_ROTATE_L:
+											{
+												actionOccured = 1;
+
+												unsigned int incomingValNum = hexStringToNum(currAction->value);
+												unsigned int manipNum = currParamVals.getParamValueNum();
+												unsigned int temp = manipNum;
+												manipNum = manipNum << incomingValNum;
+												temp = temp >> (32 - incomingValNum);
+												manipNum |= temp;
+												currParamVals.updateParamValue(manipNum);
+
+												logStream << "[BIT_ROTATE_L]";
+												std::cout << "[BIT_ROTATE_L]";
+												break;
+											}
+											case modActionTypes::actTy_BIT_ROTATE_R:
+											{
+												actionOccured = 1;
+
+												unsigned int incomingValNum = hexStringToNum(currAction->value);
+												unsigned int manipNum = currParamVals.getParamValueNum();
+												unsigned int temp = manipNum;
+												manipNum = manipNum >> incomingValNum;
+												temp = temp << (32 - incomingValNum);
+												manipNum |= temp;
+												currParamVals.updateParamValue(manipNum);
+
+												logStream << "[BIT_ROTATE_R]";
+												std::cout << "[BIT_ROTATE_R]";
+												break;
+											}
+											case modActionTypes::actTy_RETARGET_PARAM:
+											{
+												if (hexStringToNum(currAction->value) >= 0)
 												{
-												case lava::movesetParamTypes::varTy_INT:
-												{
+													actionOccured = 1;
+													currParamVals.saveParamToContents();
+													currParamVals = lava::paramTarget(*this, paramOffsetNum, lava::hexStringToNum(currAction->value));
+													logStream << "[TARGET_PARAM]\n";
+													std::cout << "[TARGET_PARAM]\n";
+													logStream << "\t\t\tParameter Redirect Triggered: New target is Param Index " << hexStringToNum(currAction->value) << "\n";
+													logStream << "\t\t\tParam Val: " << currParamVals.getParamValueString();
+													std::cout << "\t\t\tParameter Redirect Triggered: New target is Param Index " << hexStringToNum(currAction->value) << "\n";
+													std::cout << "\t\t\tParam Val: " << currParamVals.getParamValueString();
 													if (currParamVals.getParamTypeNum() == lava::movesetParamTypes::varTy_SCLR)
 													{
-														unsigned int manipNum = currParamVals.getParamValueNum();
-														manipNum /= lava::floatDenominator;
-														currParamVals.updateParamValue(manipNum);
+														logStream << " (Scalar = " << currParamVals.getParamValueNum() / lava::floatDenominator << ")";
+														std::cout << " (Scalar = " << currParamVals.getParamValueNum() / lava::floatDenominator << ")";
 													}
-													break;
+													logStream << " (Redirected)\n";
+													std::cout << " (Redirected)\n";
 												}
-												case lava::movesetParamTypes::varTy_SCLR:
-												{
-													doScalarActionPrint = 1;
-													if (currParamVals.getParamTypeNum() == lava::movesetParamTypes::varTy_INT)
-													{
-														unsigned int manipNum = currParamVals.getParamValueNum();
-														manipNum *= lava::floatDenominator;
-														currParamVals.updateParamValue(manipNum);
-													}
-													break;
-												}
-												case lava::movesetParamTypes::varTy_PNTR:
-												{
-													break;
-												}
-												case lava::movesetParamTypes::varTy_BOOL:
-												{
-													break;
-												}
-												case lava::movesetParamTypes::varTy_4:
-												{
-													break;
-												}
-												case lava::movesetParamTypes::varTy_VAR:
-												{
-													break;
-												}
-												case lava::movesetParamTypes::varTy_REQ:
-												{
-													break;
-												}
-												default:
-												{
-													break;
-												}
-												}
-												currParamVals.updateParamType(incomingValNum);
+												break;
 											}
-											else
+											case modActionTypes::actTy_CONVERT_PARAM:
 											{
-												logStream << "\t\t\tTarget parameter type (" << incomingValNum << ") was invalid.\n";
-												std::cout << "\t\t\tTarget parameter type (" << incomingValNum << ") was invalid.\n";
+												logStream << "[CONVERT_PARAM]";
+												std::cout << "[CONVERT_PARAM]";
+												unsigned int incomingValNum = lava::hexStringToNum(currAction->value);
+												if (incomingValNum < lava::movesetParamTypes::variableTypeCount)
+												{
+													switch (incomingValNum)
+													{
+													case lava::movesetParamTypes::varTy_INT:
+													{
+														if (currParamVals.getParamTypeNum() == lava::movesetParamTypes::varTy_SCLR)
+														{
+															unsigned int manipNum = currParamVals.getParamValueNum();
+															manipNum /= lava::floatDenominator;
+															currParamVals.updateParamValue(manipNum);
+														}
+														break;
+													}
+													case lava::movesetParamTypes::varTy_SCLR:
+													{
+														doScalarActionPrint = 1;
+														if (currParamVals.getParamTypeNum() == lava::movesetParamTypes::varTy_INT)
+														{
+															unsigned int manipNum = currParamVals.getParamValueNum();
+															manipNum *= lava::floatDenominator;
+															currParamVals.updateParamValue(manipNum);
+														}
+														break;
+													}
+													case lava::movesetParamTypes::varTy_PNTR:
+													{
+														break;
+													}
+													case lava::movesetParamTypes::varTy_BOOL:
+													{
+														break;
+													}
+													case lava::movesetParamTypes::varTy_4:
+													{
+														break;
+													}
+													case lava::movesetParamTypes::varTy_VAR:
+													{
+														break;
+													}
+													case lava::movesetParamTypes::varTy_REQ:
+													{
+														break;
+													}
+													default:
+													{
+														break;
+													}
+													}
+													currParamVals.updateParamType(incomingValNum);
+												}
+												else
+												{
+													logStream << "\t\t\tTarget parameter type (" << incomingValNum << ") was invalid.\n";
+													std::cout << "\t\t\tTarget parameter type (" << incomingValNum << ") was invalid.\n";
+												}
 											}
-										}
-										default:
-										{
-											logStream << "[INVALID_TYPE]";
-											std::cout << "[INVALID_TYPE]";
-											break;
-										}
+											default:
+											{
+												logStream << "[INVALID_TYPE]";
+												std::cout << "[INVALID_TYPE]";
+												break;
+											}
 										}
 
 										if (actionOccured)
