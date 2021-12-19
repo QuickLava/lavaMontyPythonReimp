@@ -14,17 +14,17 @@
 		<command name = "Sword/Hammer Glow" signature = "11041700" paramIndex = "11" paramType="0"/>
 	</targets>
 	<modifications>
-		<mod match = "000DXXXX" lock = "00000000">
-			<action type = "01" value = "01770000"/>
+		<mod match = "000DXXXX" lock = "00001111">
+			<action type = "0x00" value = "01770000"/>
 		</mod>
 		<mod match = "0017XXXX" lock = "00001111">
-			<action type = "01" value = "01780000"/>
+			<action type = "0x00" value = "01780000"/>
 		</mod>
 		<mod match = "000EXXXX" lock = "00001111">
-			<action type = "01" value = "01790000"/>
+			<action type = "0x00" value = "01790000"/>
 		</mod>
 		<mod match = "0012XXXX" lock = "00001111">
-			<action type = "01" value = "017A0000"/>
+			<action type = "0x00" value = "017A0000"/>
 		</mod>
 	</modifications>
 </movesetPatch>

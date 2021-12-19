@@ -1,0 +1,23 @@
+<?xml version="1.0"?> 
+<movesetPatch name = "Int Param Test">
+	<targets>
+		<command name = "Graphic Effect" signature = "0x11001000" paramIndex="0" paramType="0"/>
+		<command name = "Graphic Effect (Attached)" signature = "0x11010A00" paramIndex="0" paramType="0" />
+	</targets>
+	<modifications>
+		<mod match = "0000XXXX" evalMethod = "0">
+			<action name = "TO SCL" type = "0xC1" value = "00000001"/>
+			<action name = "TO INT" type = "0xC1" value = "00000000"/>
+			<action name = "TO PNT" type = "0xC1" value = "00000002"/>
+			<action name = "TO SCL" type = "0xC1" value = "00000001"/>
+			<action name = "TO PNT" type = "0xC1" value = "00000002"/>
+			<action name = "TO INT" type = "0xC1" value = "00000000"/>
+			<action name = "SWAP 1" type = "0xC2" value = "00000001"/>
+			<action name = "SWAP 1" type = "0xC2" value = "00000001"/>
+			<action name = "TRGT 1" type = "0xC0" value = "00000001"/>
+			<action name = "DO ADD" type = "0xA0" value = "00000001"/>
+			<action name = "DO SUB" type = "0xA1" value = "00000001"/>
+			<action name = "TRGT 0" type = "0xC0" value = "00000000"/>
+		</mod>
+	</modifications>
+</movesetPatch>

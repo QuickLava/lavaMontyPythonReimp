@@ -25,10 +25,9 @@ namespace lava
 	};
 	enum modActionTypes
 	{
-		actTy_NULL = -1,
+		actTy_DO_NOTHING = -1,
 		// Simple Block
-		actTy_DO_NOTHING = 0x00,
-		actTy_REPLACE,
+		actTy_REPLACE = 0x00,
 		// A is for Arithmetic
 		actTy_INT_ADD = 0xA0,
 		actTy_INT_SUB,
@@ -50,7 +49,7 @@ namespace lava
 		// You should't ever need to do this, use mod redirects isntead
 		actTy_RETARGET_PARAM = 0xC0,
 		actTy_CONVERT_PARAM,
-		//neo_actTy_SWAP_PARAMS,
+		actTy_SWAP_PARAMS,
 	};
 	enum matchEvaluationMethodTypes
 	{
@@ -104,7 +103,7 @@ namespace lava
 	struct movesetPatchModAction
 	{
 		std::string name = "";
-		int actionType = modActionTypes::actTy_NULL;
+		int actionType = modActionTypes::actTy_DO_NOTHING;
 		std::string value = "";
 	};
 	struct movesetPatchMod

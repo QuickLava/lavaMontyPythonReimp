@@ -1160,24 +1160,24 @@ namespace lava
 											}
 											case modActionTypes::actTy_RETARGET_PARAM:
 											{
+												unsigned int incomingValNum = lava::hexStringToNum(currAction->value);
 												if (hexStringToNum(currAction->value) >= 0)
 												{
-													actionOccured = 1;
 													currParamVals.saveParamToContents();
 													currParamVals = lava::paramTarget(*this, paramOffsetNum, lava::hexStringToNum(currAction->value));
-													logStream << "[TARGET_PARAM]\n";
-													std::cout << "[TARGET_PARAM]\n";
-													logStream << "\t\t\tParameter Redirect Triggered: New target is Param Index " << hexStringToNum(currAction->value) << "\n";
-													logStream << "\t\t\tParam Val: " << currParamVals.getParamValueString();
-													std::cout << "\t\t\tParameter Redirect Triggered: New target is Param Index " << hexStringToNum(currAction->value) << "\n";
-													std::cout << "\t\t\tParam Val: " << currParamVals.getParamValueString();
+													logStream << "[RETARGET_PARAM]\n";
+													std::cout << "[RETARGET_PARAM]\n";
+													logStream << "\t\t\t\tParameter Redirect Triggered: New target is Param Index " << hexStringToNum(currAction->value) << "\n";
+													logStream << "\t\t\t\tParam Val: " << currParamVals.getParamValueString();
+													std::cout << "\t\t\t\tParameter Redirect Triggered: New target is Param Index " << hexStringToNum(currAction->value) << "\n";
+													std::cout << "\t\t\t\tParam Val: " << currParamVals.getParamValueString();
 													if (currParamVals.getParamTypeNum() == lava::movesetParamTypes::varTy_SCLR)
 													{
 														logStream << " (Scalar = " << currParamVals.getParamValueNum() / lava::floatDenominator << ")";
 														std::cout << " (Scalar = " << currParamVals.getParamValueNum() / lava::floatDenominator << ")";
 													}
-													logStream << " (Redirected)\n";
-													std::cout << " (Redirected)\n";
+													logStream << " (Redirected)";
+													std::cout << " (Redirected)";
 												}
 												break;
 											}
@@ -1188,6 +1188,9 @@ namespace lava
 												unsigned int incomingValNum = lava::hexStringToNum(currAction->value);
 												if (incomingValNum < lava::movesetParamTypes::variableTypeCount)
 												{
+													actionOccured = 1;
+													doScalarActionPrint = 0;
+													doScalarFinalPrint = 0;
 													switch (incomingValNum)
 													{
 													case lava::movesetParamTypes::varTy_INT:
@@ -1203,6 +1206,7 @@ namespace lava
 													case lava::movesetParamTypes::varTy_SCLR:
 													{
 														doScalarActionPrint = 1;
+														doScalarFinalPrint = 1;
 														if (currParamVals.getParamTypeNum() == lava::movesetParamTypes::varTy_INT)
 														{
 															unsigned int manipNum = currParamVals.getParamValueNum();
@@ -1243,6 +1247,46 @@ namespace lava
 													logStream << "\t\t\tTarget parameter type (" << incomingValNum << ") was invalid.\n";
 													std::cout << "\t\t\tTarget parameter type (" << incomingValNum << ") was invalid.\n";
 												}
+												break;
+											}
+											case modActionTypes::actTy_SWAP_PARAMS:
+											{
+												logStream << "[SWAP_PARAMS]\n";
+												std::cout << "[SWAP_PARAMS]\n";
+												unsigned int incomingValNum = lava::hexStringToNum(currAction->value);
+												lava::paramTarget tempTarget = lava::paramTarget(*this, paramOffsetNum, incomingValNum);
+												std::size_t tempType = tempTarget.getParamTypeNum();
+												std::size_t tempValue = tempTarget.getParamValueNum();
+												if (tempType != SIZE_MAX && tempValue != SIZE_MAX)
+												{
+													if (tempType == lava::movesetParamTypes::varTy_SCLR)
+													{
+														doScalarActionPrint = 1;
+														doScalarFinalPrint = 1;
+													}
+													else
+													{
+														doScalarActionPrint = 0;
+														doScalarFinalPrint = 0;
+													}
+													tempTarget.updateParamType(currParamVals.getParamTypeNum());
+													tempTarget.updateParamValue(currParamVals.getParamValueNum());
+													tempTarget.saveParamToContents();
+													currParamVals.updateParamType(tempType);
+													currParamVals.updateParamValue(tempValue);
+													logStream << "\t\t\t\tParameter Swap Triggered with Param at Index " << hexStringToNum(currAction->value) << "\n";
+													std::cout << "\t\t\t\tParameter Swap Triggered with Param at Index " << hexStringToNum(currAction->value) << "\n";
+													logStream << "\t\t\t\tThat Param's Type is now: " << tempTarget.getParamTypeNum() << ", and its Value is now: " << tempTarget.getParamValueString() << "\n";
+													std::cout << "\t\t\t\tThat Param's Type is now: " << tempTarget.getParamTypeNum() << ", and its Value is now: " << tempTarget.getParamValueString() << "\n";
+													logStream << "\t\t\t\tThis Param's Type is now: " << currParamVals.getParamTypeNum() << ", and its Value is now: " << currParamVals.getParamValueString();
+													std::cout << "\t\t\t\tThis Param's Type is now: " << currParamVals.getParamTypeNum() << ", and its Value is now: " << currParamVals.getParamValueString();
+												}
+												else
+												{
+													logStream << "\t\t\t\t[ERROR: INDEX LOCATION IS OUT OF BOUNDS]";
+													std::cout << "\t\t\t\t[ERROR: INDEX LOCATION IS OUT OF BOUNDS]";
+												}
+												break;
 											}
 											default:
 											{
@@ -1375,9 +1419,17 @@ namespace lava
 			targetParamIndexOffset = (8 * paramIndexIn);
 			updateParamOffset(paramOffsetIn);
 			std::size_t numGotten;
-			updateParamType(parentPtr->contents.getBytes(4, this->paramOffsetNum + targetParamIndexOffset, numGotten));
-			updateParamValue(parentPtr->contents.getBytes(4, this->paramOffsetNum + targetParamIndexOffset + 4, numGotten));
-
+			std::vector<char> tempByteVec = {0, 0, 0, 0};
+			tempByteVec = parentPtr->contents.getBytes(4, this->paramOffsetNum + targetParamIndexOffset, numGotten);
+			if (numGotten == 4)
+			{
+				updateParamType(tempByteVec);
+			}
+			tempByteVec = parentPtr->contents.getBytes(4, this->paramOffsetNum + targetParamIndexOffset + 4, numGotten);
+			if (numGotten == 4)
+			{
+				updateParamValue(tempByteVec);
+			}
 		}
 	}
 	int paramTarget::getParamIndex()
