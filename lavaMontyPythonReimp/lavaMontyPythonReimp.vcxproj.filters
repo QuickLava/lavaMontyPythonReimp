@@ -27,6 +27,9 @@
     <ClCompile Include="lavaMPRUtility.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="whereami\whereami.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lavaMontyPythonReimp.h">
@@ -39,6 +42,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="lavaMPRUtility.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="whereami\whereami.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

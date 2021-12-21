@@ -143,12 +143,14 @@
     <ClCompile Include="lavaMPRUtility.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="pugi\pugixml.cpp" />
+    <ClCompile Include="whereami\whereami.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lavaMontyPythonReimp.h" />
     <ClInclude Include="lavaMPRUtility.h" />
     <ClInclude Include="pugi\pugiconfig.hpp" />
     <ClInclude Include="pugi\pugixml.hpp" />
+    <ClInclude Include="whereami\whereami.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="notes.txt" />

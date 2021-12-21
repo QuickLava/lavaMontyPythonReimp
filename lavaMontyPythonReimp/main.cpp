@@ -1,17 +1,42 @@
 #include "lavaMontyPythonReimp.h"
 
-const std::string patchListLocation = ".\\patches.txt";
+//#define WIN_DRAG_DROP_FIX
+#ifdef WIN_DRAG_DROP_FIX
+#include "whereami/whereami.h"
+std::string getExecutableDir()
+{
+	std::string result;
+	int length = wai_getModulePath(NULL, 0, NULL);
+	char* path = (char*)malloc(length + 1);
+	wai_getModulePath(path, length, NULL);
+	if (path != nullptr)
+	{
+		path[length] = '\0';
+		result = path;
+	}
+	return result;
+}
+#endif
+
 int main(int argc, char* argv[])
 {
+	std::srand(std::time(0));
+	std::string patchListLocation = "patches.txt";
+#ifdef WIN_DRAG_DROP_FIX
+	std::string executableDir = getExecutableDir();
+	executableDir = executableDir.substr(0, executableDir.rfind('\\') + 1);
+	patchListLocation = executableDir + patchListLocation;
+#endif
 	if (argc > 1)
 	{
 		std::vector<lava::movesetPatch> testPatches;
 		std::vector<lava::movesetPatch> patchesFromFile;
 		std::vector<std::string> movesetPatches = {};
-		std::ifstream movesetPatchesIn(patchListLocation);
+		std::ifstream movesetPatchesIn;
 		std::string commentChars = "#";
 		std::string currentLine = "";
 		bool invalidPatches = 0;
+		movesetPatchesIn.open(patchListLocation);
 		if (movesetPatchesIn.is_open())
 		{
 			while (std::getline(movesetPatchesIn, currentLine))
@@ -22,6 +47,12 @@ int main(int argc, char* argv[])
 					{
 						currentLine = currentLine.substr(1, currentLine.size() - 2);
 					}
+#ifdef WIN_DRAG_DROP_FIX
+					if (currentLine.find("./") == 0 || currentLine.find(".\\") == 0)
+					{
+						currentLine = executableDir + currentLine.substr(2);
+					}
+#endif
 					std::ifstream patchValidationStream(currentLine);
 					if (patchValidationStream.is_open())
 					{
@@ -62,6 +93,7 @@ int main(int argc, char* argv[])
 							outFile += "_edit.pac";
 							moveset.contents.dumpToFile(outFile);
 						}
+						lava::changelogStream.close();
 					}
 					else
 					{
@@ -78,10 +110,14 @@ int main(int argc, char* argv[])
 				std::cerr << "[ERROR] Patch list file (" << patchListLocation << ") was present, but empty. Please specify paths to any patches within that file and try again.\n\n";
 			}
 		}
+		else
+		{
+			std::cerr << "[ERROR] \""<< patchListLocation << "\" could not be opened! Please create a patch list in the same folder as this executable, and try again.\n";
+		}
 	}
 	else
 	{
-		std::cerr << "No target files provided. Must provide valid .pac files to work on. Drag them onto this executable to process them (or specify them as command line arguments).\n";
+		std::cerr << "[ERROR] No target files provided. Must provide valid .pac files to work on. Drag them onto this executable to process them (or specify them as command line arguments).\n";
 	}
 	std::cout << "Press any key to close this window...\n";
 	_getch();
