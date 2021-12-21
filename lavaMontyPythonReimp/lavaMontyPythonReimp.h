@@ -10,6 +10,10 @@ namespace lava
 	constexpr std::size_t canonParamLengthInBytes = canonParamLengthStr / 2;
 	constexpr std::size_t globalBaseOffset = 0x80;
 	constexpr float floatDenominator = 0xEA60;
+	constexpr float attributefloatDenominator = 0x3F800000;
+	constexpr std::size_t canonAttributeSectionLength = 0x2E4;
+	constexpr std::size_t canonAttributeLengthInBytes = 0x4;
+	constexpr std::size_t canonAttributeSectionCount = canonAttributeSectionLength/canonAttributeLengthInBytes;
 	const std::string changelogSuffix = "_changelog.txt";
 
 	enum movesetParamTypes
@@ -28,15 +32,23 @@ namespace lava
 		actTy_DO_NOTHING = -1,
 		// Simple Block
 		actTy_REPLACE = 0x00,
+		actTy_RANDOM,
 		// A is for Arithmetic
 		actTy_INT_ADD = 0xA0,
 		actTy_INT_SUB,
 		actTy_INT_MUL,
 		actTy_INT_DIV,
+		actTy_INT_MOD,
+		actTy_SCLR_ADD,
+		actTy_SCLR_SUB,
+		actTy_SCLR_MUL,
+		actTy_SCLR_DIV,
+		actTy_SCLR_MOD,
 		actTy_FLT_ADD,
 		actTy_FLT_SUB,
 		actTy_FLT_MUL,
 		actTy_FLT_DIV,
+		actTy_FLT_MOD,
 		// B is for Bit Manipulation
 		actTy_BIT_AND = 0xB0,
 		actTy_BIT_OR,
@@ -45,9 +57,9 @@ namespace lava
 		actTy_BIT_SHIFT_R,
 		actTy_BIT_ROTATE_L,
 		actTy_BIT_ROTATE_R,
-		// C is for CAUTION
-		// You should't ever need to do this, use mod redirects isntead
-		actTy_RETARGET_PARAM = 0xC0,
+		// F is for CAUTION (lol)
+		// You should't often have need for any of these, but they're here.
+		actTy_RETARGET_PARAM = 0xF0,
 		actTy_CONVERT_PARAM,
 		actTy_SWAP_PARAMS,
 	};
@@ -150,6 +162,7 @@ namespace lava
 		std::string fetchString(std::size_t strAddr);
 		void summarizeTable(std::size_t tableAddr, std::size_t entryCount, std::size_t offsetShiftSize, std::string prefix = "\t\t", std::ostream& output = std::cout);
 		void summarizeOffsetSection(std::ostream& output = std::cout, std::size_t adjustment = 0x80);
+		void summarizeAttributeSection(std::ostream& output = std::cout);
 
 		std::vector<std::size_t> changeMatchingParameter(std::vector<std::pair<std::string, std::vector<char>>> functions, std::vector<std::pair<std::string, std::string>> matches, std::size_t parameterOffsetInBytes);
 
@@ -164,13 +177,13 @@ namespace lava
 		int targetParamIndex = 0;
 		std::size_t targetParamIndexOffset = SIZE_MAX;
 
-		std::vector<char> paramOffset = { 0, 0, 0, 0 };
+		std::vector<char> paramOffset = { CHAR_MAX, CHAR_MAX, CHAR_MAX, CHAR_MAX };
 		std::size_t paramOffsetNum = SIZE_MAX;
 
-		std::vector<char> paramTypeIdentifier = { 0, 0, 0, 0 };
+		std::vector<char> paramTypeIdentifier = { CHAR_MAX, CHAR_MAX, CHAR_MAX, CHAR_MAX };
 		std::size_t paramTypeIdentifierNum = SIZE_MAX;
 
-		std::vector<char> paramValue = { 0, 0, 0, 0 };
+		std::vector<char> paramValue = { CHAR_MAX, CHAR_MAX, CHAR_MAX, CHAR_MAX };
 		std::size_t paramValueNum = SIZE_MAX;
 		std::string paramValueString = "00000000";
 

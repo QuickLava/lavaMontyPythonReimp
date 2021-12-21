@@ -1,5 +1,5 @@
 <?xml version="1.0"?> 
-<movesetPatch name = "Float Param Test">
+<movesetPatch name = "Scalar Param Test">
 	<targets>
 		<command name = "Graphic Effect" signature = "0x11001000" paramIndex="8"/>
 		<command name = "Graphic Effect (Attached)" signature = "0x11010A00" paramIndex="8"/>
@@ -8,10 +8,10 @@
 		<mod match = "00000000" evalMethod = "1">
 		</mod>
 		<mod match = "0000XXXX" extraCondition = "1">
-			<action type = "0xA4" value = "00007530"/>
 			<action type = "0xA5" value = "00007530"/>
-			<action type = "0xA6" value = "0001D4C0"/>
+			<action type = "0xA6" value = "00007530"/>
 			<action type = "0xA7" value = "0001D4C0"/>
+			<action type = "0xA8" value = "0001D4C0"/>
 		</mod>
 	</modifications>
 </movesetPatch>
