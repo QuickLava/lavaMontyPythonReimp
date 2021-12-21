@@ -16,6 +16,14 @@ namespace lava
 	constexpr std::size_t canonAttributeSectionCount = canonAttributeSectionLength/canonAttributeLengthInBytes;
 	const std::string changelogSuffix = "_changelog.txt";
 
+	constexpr size_t attributeHackActivationSignature = 0xDEADBEEF;
+
+	typedef union
+	{
+		unsigned int hex;
+		float flt;
+	} INT_FLT_BUNDLE;
+
 	enum movesetParamTypes
 	{
 		varTy_INT = 0,
@@ -25,7 +33,9 @@ namespace lava
 		varTy_4,
 		varTy_VAR,
 		varTy_REQ,
-		variableTypeCount
+		variableTypeCount,
+		varTy_ATTRIBUTE_INT = 0xFF00,
+		varTy_ATTRIBUTE_FLT = 0xFF01,
 	};
 	enum modActionTypes
 	{
@@ -33,6 +43,7 @@ namespace lava
 		// Simple Block
 		actTy_REPLACE = 0x00,
 		actTy_RANDOM,
+		actTy_FLT_RANDOM,
 		// A is for Arithmetic
 		actTy_INT_ADD = 0xA0,
 		actTy_INT_SUB,
@@ -108,7 +119,7 @@ namespace lava
 	struct movesetPatchTarget
 	{
 		std::string name = "";
-		std::vector<char> signature = {};
+		std::vector<char> signature = {CHAR_MAX, CHAR_MAX, CHAR_MAX, CHAR_MAX};
 		int paramIndex = INT_MAX;
 		int paramType = INT_MAX;
 	};
@@ -174,6 +185,8 @@ namespace lava
 	private:
 		movesetFile* parentPtr = nullptr;
 
+		bool attributeMode = 0;
+
 		int targetParamIndex = 0;
 		std::size_t targetParamIndexOffset = SIZE_MAX;
 
@@ -189,7 +202,7 @@ namespace lava
 
 	public:
 		paramTarget();
-		paramTarget(movesetFile& parent, std::size_t paramOffsetIn, int paramIndexIn);
+		paramTarget(movesetFile& parent, std::size_t paramOffsetIn, int paramIndexIn, bool attributeModeIn = 0);
 
 		int getParamIndex();
 		std::size_t getParamIndexOffset();

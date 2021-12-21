@@ -633,6 +633,9 @@ namespace lava
 		std::size_t numGotten = 0;
 		std::vector<std::size_t> searchPings = {};
 
+		// Initialize Attribute Hack Vars
+		bool doingAttributeHack = 0;
+
 		// Loop through every target
 		for (std::size_t targetItr = 0; targetItr < targetCount; targetItr++)
 		{
@@ -649,14 +652,32 @@ namespace lava
 			std::cout << "):\n";
 			logStream << "):\n";
 			
-			searchPings = contents.searchMultiple(currTarget->signature, dataOffset, dataOffset + dataLength);
+			if (lava::hexVecToNum(currTarget->signature) == attributeHackActivationSignature)
+			{
+				searchPings = {dataOffset};
+				doingAttributeHack = 1;
+			}
+			else
+			{
+				searchPings = contents.searchMultiple(currTarget->signature, dataOffset, dataOffset + dataLength);
+				doingAttributeHack = 0;
+			}
 
 			// Loop through every received ping
 			for (std::size_t pingItr = 0; pingItr < searchPings.size(); pingItr++)
 			{
 				// Receive and validate that ping's parameter offset
 				std::size_t currPing = searchPings[pingItr];
-				std::vector<char> paramOffset = contents.getBytes(4, currPing + currTarget->signature.size(), numGotten);
+				std::vector<char> paramOffset;
+				if (doingAttributeHack)
+				{
+					paramOffset = lava::numToHexVec(0x00);
+					numGotten = 4;
+				}
+				else
+				{
+					paramOffset = contents.getBytes(4, currPing + currTarget->signature.size(), numGotten);
+				}
 				if (numGotten == 4)
 				{
 					// Convert that offset to a size_t, and apply dataOffset (makes offset relative to beginning of .PAC file instead of beginning of moveset section
@@ -666,7 +687,7 @@ namespace lava
 					if (paramOffsetNum < (dataOffset + dataLength))
 					{
 						// Create our param target. This holds the current value of the target parameter, as well as where it's stored in the file, and is the variable that we'll be modifying to make changes to the parameter's value and type.
-						lava::paramTarget currParamVals(*this, paramOffsetNum, currTarget->paramIndex);
+						lava::paramTarget currParamVals(*this, paramOffsetNum, currTarget->paramIndex, doingAttributeHack);
 
 						// Process target paramType matching. If no type was specified, or if one was specified and it matches our found type, proceed.
 						if (currTarget->paramType == INT_MAX || currParamVals.getParamTypeNum() == currTarget->paramType)
@@ -682,6 +703,8 @@ namespace lava
 							bool matchFound = 0;
 							bool doScalarActionPrint = 0;
 							bool doScalarFinalPrint = 0;
+							bool doFloatActionPrint = 0;
+							bool doFloatFinalPrint = 0;
 							const movesetPatchMod* currMod = nullptr;
 
 							// Do initial param val reporting
@@ -691,6 +714,13 @@ namespace lava
 							{
 								logStream << " (Scalar = " << currParamVals.getParamValueNum() / lava::floatDenominator << ")";
 								std::cout << " (Scalar = " << currParamVals.getParamValueNum() / lava::floatDenominator << ")";
+							}
+							if (currParamVals.getParamTypeNum() == lava::movesetParamTypes::varTy_ATTRIBUTE_FLT)
+							{
+								lava::INT_FLT_BUNDLE currParamIFB;
+								currParamIFB.hex = currParamVals.getParamValueNum();
+								logStream << " (Float = " << currParamIFB.flt << ")";
+								std::cout << " (Float = " << currParamIFB.flt << ")";
 							}
 							logStream << "\n";
 							std::cout << "\n";
@@ -706,7 +736,7 @@ namespace lava
 								if (currMod->paramIndexRedirect != INT_MAX)
 								{
 									//... reinitialize the param bundle to point to the new param.
-									currParamVals = lava::paramTarget(*this, paramOffsetNum, currMod->paramIndexRedirect);
+									currParamVals = lava::paramTarget(*this, paramOffsetNum, currMod->paramIndexRedirect, doingAttributeHack);
 									// Record that the redirect happened (used for reporting later).
 									redirectUsed = 1;
 								}
@@ -714,7 +744,7 @@ namespace lava
 								else
 								{
 									//... ensure we're on the parameter originally specified by the target.
-									currParamVals = lava::paramTarget(*this, paramOffsetNum, currTarget->paramIndex);
+									currParamVals = lava::paramTarget(*this, paramOffsetNum, currTarget->paramIndex, doingAttributeHack);
 									// Record that no redirect happened.
 									redirectUsed = 0;
 								}
@@ -961,6 +991,8 @@ namespace lava
 										actionOccured = 0;
 										doScalarActionPrint = 0;
 										doScalarFinalPrint = 0;
+										doFloatActionPrint = 0;
+										doFloatActionPrint = 0;
 
 										// Store a pointer to the current action
 										currAction = &currMod->actions[actionItr];
@@ -991,13 +1023,30 @@ namespace lava
 											{
 												actionOccured = 1;
 
-												unsigned int manipNum = lava::hexStringToNum(currAction->value) + 1;
-												manipNum = (manipNum == 0) ? UINT_MAX : manipNum;
-												manipNum = (rand() | (rand() << 16)) % (manipNum);
-												currParamVals.updateParamValue(manipNum);
+												unsigned int incomingNum = lava::hexStringToNum(currAction->value) + 1;
+												incomingNum = (incomingNum == 0) ? UINT_MAX : incomingNum;
+												unsigned int randomNum = rand() | (rand() << 16);
+												randomNum %= incomingNum;
+												currParamVals.updateParamValue(randomNum);
 
 												logStream << "[RAND]";
 												std::cout << "[RAND]";
+												break;
+											}
+											case modActionTypes::actTy_FLT_RANDOM:
+											{
+												actionOccured = 1;
+												doFloatActionPrint = 1;
+
+												// Get random number between 0 and 1
+												float tempFloat = float(rand()) / float((RAND_MAX));
+												lava::INT_FLT_BUNDLE incomingValNum = { UINT_MAX };
+												incomingValNum.hex = hexStringToNum(currAction->value);
+												incomingValNum.flt *= tempFloat;
+												currParamVals.updateParamValue(incomingValNum.hex);
+
+												logStream << "[FLT_RAND]";
+												std::cout << "[FLT_RAND]";
 												break;
 											}
 											case modActionTypes::actTy_INT_ADD:
@@ -1135,6 +1184,86 @@ namespace lava
 												std::cout << "[SCLR_MOD]";
 												break;
 											}
+											case modActionTypes::actTy_FLT_ADD:
+											{
+												actionOccured = 1;
+												doFloatActionPrint = 1;
+
+												lava::INT_FLT_BUNDLE incomingValNum = {UINT_MAX};
+												incomingValNum.hex = hexStringToNum(currAction->value);
+												lava::INT_FLT_BUNDLE manipNum = { UINT_MAX };
+												manipNum.hex = currParamVals.getParamValueNum();
+												manipNum.flt += incomingValNum.flt;
+												currParamVals.updateParamValue(manipNum.hex);
+
+												logStream << "[FLT_ADD]";
+												std::cout << "[FLT_ADD]";
+												break;
+											}
+											case modActionTypes::actTy_FLT_SUB:
+											{
+												actionOccured = 1;
+												doFloatActionPrint = 1;
+
+												lava::INT_FLT_BUNDLE incomingValNum;
+												incomingValNum.hex = hexStringToNum(currAction->value);
+												lava::INT_FLT_BUNDLE manipNum;
+												manipNum.hex = currParamVals.getParamValueNum();
+												manipNum.flt -= incomingValNum.flt;
+												currParamVals.updateParamValue(manipNum.hex);
+
+												logStream << "[FLT_SUB]";
+												std::cout << "[FLT_SUB]";
+												break;
+											}
+											case modActionTypes::actTy_FLT_MUL:
+											{
+												actionOccured = 1;
+												doFloatActionPrint = 1;
+
+												lava::INT_FLT_BUNDLE incomingValNum;
+												incomingValNum.hex = hexStringToNum(currAction->value);
+												lava::INT_FLT_BUNDLE manipNum;
+												manipNum.hex = currParamVals.getParamValueNum();
+												manipNum.flt *= incomingValNum.flt;
+												currParamVals.updateParamValue(manipNum.hex);
+
+												logStream << "[FLT_MUL]";
+												std::cout << "[FLT_MUL]";
+												break;
+											}
+											case modActionTypes::actTy_FLT_DIV:
+											{
+												actionOccured = 1;
+												doFloatActionPrint = 1;
+
+												lava::INT_FLT_BUNDLE incomingValNum;
+												incomingValNum.hex = hexStringToNum(currAction->value);
+												lava::INT_FLT_BUNDLE manipNum;
+												manipNum.hex = currParamVals.getParamValueNum();
+												manipNum.flt /= incomingValNum.flt;
+												currParamVals.updateParamValue(manipNum.hex);
+
+												logStream << "[FLT_DIV]";
+												std::cout << "[FLT_DIV]";
+												break;
+											}
+											case modActionTypes::actTy_FLT_MOD:
+											{
+												actionOccured = 1;
+												doFloatActionPrint = 1;
+
+												lava::INT_FLT_BUNDLE incomingValNum;
+												incomingValNum.hex = hexStringToNum(currAction->value);
+												lava::INT_FLT_BUNDLE manipNum;
+												manipNum.hex = currParamVals.getParamValueNum();
+												manipNum.flt = std::fmod(manipNum.flt, incomingValNum.flt);
+												currParamVals.updateParamValue(manipNum.hex);
+
+												logStream << "[FLT_MOD]";
+												std::cout << "[FLT_MOD]";
+												break;
+											}
 											case modActionTypes::actTy_BIT_AND:
 											{
 												actionOccured = 1;
@@ -1238,7 +1367,7 @@ namespace lava
 												if (hexStringToNum(currAction->value) >= 0)
 												{
 													currParamVals.saveParamToContents();
-													currParamVals = lava::paramTarget(*this, paramOffsetNum, lava::hexStringToNum(currAction->value));
+													currParamVals = lava::paramTarget(*this, paramOffsetNum, lava::hexStringToNum(currAction->value), doingAttributeHack);
 													logStream << "[RETARGET_PARAM]\n";
 													std::cout << "[RETARGET_PARAM]\n";
 													logStream << "\t\t\t\tParameter Redirect Triggered: New target is Param Index " << hexStringToNum(currAction->value) << "\n";
@@ -1260,7 +1389,7 @@ namespace lava
 												logStream << "[CONVERT_PARAM]";
 												std::cout << "[CONVERT_PARAM]";
 												unsigned int incomingValNum = lava::hexStringToNum(currAction->value);
-												if (incomingValNum < lava::movesetParamTypes::variableTypeCount)
+												if (!doingAttributeHack && incomingValNum < lava::movesetParamTypes::variableTypeCount)
 												{
 													actionOccured = 1;
 													doScalarActionPrint = 0;
@@ -1328,7 +1457,7 @@ namespace lava
 												logStream << "[SWAP_PARAMS]\n";
 												std::cout << "[SWAP_PARAMS]\n";
 												unsigned int incomingValNum = lava::hexStringToNum(currAction->value);
-												lava::paramTarget tempTarget = lava::paramTarget(*this, paramOffsetNum, incomingValNum);
+												lava::paramTarget tempTarget = lava::paramTarget(*this, paramOffsetNum, incomingValNum, doingAttributeHack);
 												std::size_t tempType = tempTarget.getParamTypeNum();
 												std::size_t tempValue = tempTarget.getParamValueNum();
 												if (tempType != SIZE_MAX && tempValue != SIZE_MAX)
@@ -1338,10 +1467,17 @@ namespace lava
 														doScalarActionPrint = 1;
 														doScalarFinalPrint = 1;
 													}
+													else if (tempType == lava::movesetParamTypes::varTy_ATTRIBUTE_FLT)
+													{
+														doFloatActionPrint = 1;
+														doFloatFinalPrint = 1;
+													}
 													else
 													{
 														doScalarActionPrint = 0;
 														doScalarFinalPrint = 0;
+														doFloatActionPrint = 0;
+														doFloatFinalPrint = 0;
 													}
 													tempTarget.updateParamType(currParamVals.getParamTypeNum());
 													tempTarget.updateParamValue(currParamVals.getParamValueNum());
@@ -1383,6 +1519,21 @@ namespace lava
 												logStream << "\n\t\t\t\t" << intermediateParamValString << " (" << intermediateFlt << ") -> " << currParamVals.getParamValueString() << " (" << currParamVals.getParamValueNum() / lava::floatDenominator << ")\n";
 												std::cout << "\n\t\t\t\t" << intermediateParamValString << " (" << intermediateFlt << ") -> " << currParamVals.getParamValueString() << " (" << currParamVals.getParamValueNum() / lava::floatDenominator << ")\n";
 											}
+											else if (currParamVals.getParamTypeNum() == lava::movesetParamTypes::varTy_ATTRIBUTE_FLT || doFloatActionPrint)
+											{
+												logStream << " Value = " << currAction->value;
+												std::cout << " Value = " << currAction->value;
+												lava::INT_FLT_BUNDLE incomingFlt;
+												incomingFlt.hex = hexStringToNum(currAction->value);
+												logStream << " (Float = " << incomingFlt.flt << ")";
+												std::cout << " (Float = " << incomingFlt.flt << ")";
+												lava::INT_FLT_BUNDLE intermediateFlt;
+												intermediateFlt.hex = lava::hexStringToNum(intermediateParamValString);
+												lava::INT_FLT_BUNDLE currParamIFB;
+												currParamIFB.hex = currParamVals.getParamValueNum();
+												logStream << "\n\t\t\t\t" << intermediateParamValString << " (" << intermediateFlt.flt << ") -> " << currParamVals.getParamValueString() << " (" << currParamIFB.flt << ")\n";
+												std::cout << "\n\t\t\t\t" << intermediateParamValString << " (" << intermediateFlt.flt << ") -> " << currParamVals.getParamValueString() << " (" << currParamIFB.flt << ")\n";
+											}
 											else
 											{
 												logStream << " Value = " << currAction->value << "\n\t\t\t\t" << intermediateParamValString << " -> " << currParamVals.getParamValueString() << "\n";
@@ -1421,13 +1572,28 @@ namespace lava
 									if (currMod->actions.size())
 									{
 										// Report results:
-										logStream << "\t\t\tFinal Value: " << lava::hexVecToHexStringWithPadding(contents.getBytes(4, currParamVals.getParamOffsetNum() + currParamVals.getParamIndexOffset() + 4, numGotten), lava::canonParamLengthStr);
-										std::cout << "\t\t\tFinal Value: " << lava::hexVecToHexStringWithPadding(contents.getBytes(4, currParamVals.getParamOffsetNum() + currParamVals.getParamIndexOffset() + 4, numGotten), lava::canonParamLengthStr);
+										if (doingAttributeHack)
+										{
+											logStream << "\t\t\tFinal Value: " << lava::hexVecToHexStringWithPadding(contents.getBytes(4, currParamVals.getParamOffsetNum() + currParamVals.getParamIndexOffset(), numGotten), lava::canonParamLengthStr);
+											std::cout << "\t\t\tFinal Value: " << lava::hexVecToHexStringWithPadding(contents.getBytes(4, currParamVals.getParamOffsetNum() + currParamVals.getParamIndexOffset(), numGotten), lava::canonParamLengthStr);
+										}
+										else
+										{
+											logStream << "\t\t\tFinal Value: " << lava::hexVecToHexStringWithPadding(contents.getBytes(4, currParamVals.getParamOffsetNum() + currParamVals.getParamIndexOffset() + 4, numGotten), lava::canonParamLengthStr);
+											std::cout << "\t\t\tFinal Value: " << lava::hexVecToHexStringWithPadding(contents.getBytes(4, currParamVals.getParamOffsetNum() + currParamVals.getParamIndexOffset() + 4, numGotten), lava::canonParamLengthStr);
+										}
 										// Do scalar report if necessary
 										if (currParamVals.getParamTypeNum() == lava::movesetParamTypes::varTy_SCLR || doScalarFinalPrint)
 										{
 											logStream << " (Scalar = " << currParamVals.getParamValueNum() / lava::floatDenominator << ")";
 											std::cout << " (Scalar = " << currParamVals.getParamValueNum() / lava::floatDenominator << ")";
+										}
+										else if (currParamVals.getParamTypeNum() == lava::movesetParamTypes::varTy_ATTRIBUTE_FLT || doFloatFinalPrint)
+										{
+											lava::INT_FLT_BUNDLE currParamIFB;
+											currParamIFB.hex = currParamVals.getParamValueNum();
+											logStream << " (Float = " << currParamIFB.flt << ")";
+											std::cout << " (Float = " << currParamIFB.flt << ")";
 										}
 										logStream << "\n";
 										std::cout << "\n";
@@ -1489,25 +1655,50 @@ namespace lava
 	}
 
 	paramTarget::paramTarget() {};
-	paramTarget::paramTarget(movesetFile& parent, std::size_t paramOffsetIn, int paramIndexIn)
+	paramTarget::paramTarget(movesetFile& parent, std::size_t paramOffsetIn, int paramIndexIn, bool attributeModeIn)
 	{
 		if (parent.contents.size)
 		{
 			parentPtr = &parent;
-			targetParamIndex = paramIndexIn;
-			targetParamIndexOffset = (8 * paramIndexIn);
-			updateParamOffset(paramOffsetIn);
-			std::size_t numGotten;
-			std::vector<char> tempByteVec = {0, 0, 0, 0};
-			tempByteVec = parentPtr->contents.getBytes(4, this->paramOffsetNum + targetParamIndexOffset, numGotten);
-			if (numGotten == 4)
+			if (attributeModeIn)
 			{
-				updateParamType(tempByteVec);
+				targetParamIndex = paramIndexIn;
+				targetParamIndexOffset = (4 * targetParamIndex);
+				updateParamOffset(paramOffsetIn);
+				std::size_t numGotten;
+				std::vector<char> tempByteVec = { 0, 0, 0, 0 };
+				tempByteVec = parentPtr->contents.getBytes(4, this->paramOffsetNum + targetParamIndexOffset, numGotten);
+				if (numGotten == 4)
+				{
+					updateParamValue(tempByteVec);
+				}
+				if ((paramValueNum & 0x7FFFFFFF) < 0x10000000)
+				{
+					updateParamType(lava::movesetParamTypes::varTy_ATTRIBUTE_INT);
+				}
+				else
+				{
+					updateParamType(lava::movesetParamTypes::varTy_ATTRIBUTE_FLT);
+				}
+				attributeMode = attributeModeIn;
 			}
-			tempByteVec = parentPtr->contents.getBytes(4, this->paramOffsetNum + targetParamIndexOffset + 4, numGotten);
-			if (numGotten == 4)
+			else
 			{
-				updateParamValue(tempByteVec);
+				targetParamIndex = paramIndexIn;
+				targetParamIndexOffset = (8 * targetParamIndex);
+				updateParamOffset(paramOffsetIn);
+				std::size_t numGotten;
+				std::vector<char> tempByteVec = { 0, 0, 0, 0 };
+				tempByteVec = parentPtr->contents.getBytes(4, this->paramOffsetNum + targetParamIndexOffset, numGotten);
+				if (numGotten == 4)
+				{
+					updateParamType(tempByteVec);
+				}
+				tempByteVec = parentPtr->contents.getBytes(4, this->paramOffsetNum + targetParamIndexOffset + 4, numGotten);
+				if (numGotten == 4)
+				{
+					updateParamValue(tempByteVec);
+				}
 			}
 		}
 	}
@@ -1559,13 +1750,19 @@ namespace lava
 	}
 	void paramTarget::updateParamType(std::size_t paramTypeIdentifierNumIn)
 	{
-		paramTypeIdentifierNum = paramTypeIdentifierNumIn;
-		paramTypeIdentifier = lava::numToHexVec(paramTypeIdentifierNum);
+		if (!attributeMode)
+		{
+			paramTypeIdentifierNum = paramTypeIdentifierNumIn;
+			paramTypeIdentifier = lava::numToHexVec(paramTypeIdentifierNum);
+		}
 	}
 	void paramTarget::updateParamType(std::vector<char> paramTypeIdentifierIn)
 	{
-		paramTypeIdentifier = paramTypeIdentifierIn;
-		paramTypeIdentifierNum = lava::hexVecToNum(paramTypeIdentifier);
+		if (!attributeMode)
+		{
+			paramTypeIdentifier = paramTypeIdentifierIn;
+			paramTypeIdentifierNum = lava::hexVecToNum(paramTypeIdentifier);
+		}
 	}
 	void paramTarget::updateParamValue(std::size_t paramValueNumIn)
 	{
@@ -1587,9 +1784,20 @@ namespace lava
 	}
 	bool paramTarget::saveParamToContents()
 	{
-		bool result = 1;
-		result &= parentPtr->contents.setBytes(paramTypeIdentifier, paramOffsetNum + targetParamIndexOffset);
-		result &= parentPtr->contents.setBytes(paramValue, paramOffsetNum + targetParamIndexOffset + 4);
+		bool result = 0;
+		if (parentPtr != nullptr)
+		{
+			result = 1;
+			if (attributeMode)
+			{
+				result &= parentPtr->contents.setBytes(paramValue, paramOffsetNum + targetParamIndexOffset);
+			}
+			else
+			{
+				result &= parentPtr->contents.setBytes(paramTypeIdentifier, paramOffsetNum + targetParamIndexOffset);
+				result &= parentPtr->contents.setBytes(paramValue, paramOffsetNum + targetParamIndexOffset + 4);
+			}
+		}
 		return result;
 	}
 }

@@ -1,0 +1,41 @@
+<?xml version="1.0"?> 
+<movesetPatch name = "Attribute Hack Test (INT)">
+	<targets>
+		<command name = "[ATTR] Jump Startup Time" signature = "0xDEADBEEF" paramIndex="12" paramType="0xFF00"/>
+	</targets>
+	<modifications>
+		<mod match = "00000004" evalMethod = "0">
+			<action type = "0xA0" value = "00000004"/>
+			<action type = "0xA1" value = "00000004"/>
+			<action type = "0xA2" value = "00000004"/>
+			<action type = "0xA3" value = "00000004"/>
+			<action type = "0xA2" value = "00000002"/>
+		</mod>
+	</modifications>
+</movesetPatch>
+<movesetPatch name = "Attribute Hack Test (FLT)">
+	<targets>
+		<command name = "[ATTR] Jump V Initial Velocity" signature = "0xDEADBEEF" paramIndex="14" paramType="0xFF01"/>
+		<command name = "[ATTR] Hop V Initial Velocity" signature = "0xDEADBEEF" paramIndex="17" paramType="0xFF01"/>
+	</targets>
+	<modifications>
+		<mod match = "401F0A3D" evalMethod = "0">
+		</mod>
+		<mod match = "3FCAE148" evalMethod = "0" extraCondition = "03" >
+			<action type = "0xAA" value = "40000000"/>
+			<action type = "0xAB" value = "40000000"/>
+			<action type = "0xAC" value = "40000000"/>
+			<action type = "0xAD" value = "40000000"/>
+			<action type = "0xAC" value = "40000000"/>
+		</mod>
+		<mod match = "XXXXXXXX" evalMethod = "0" extraCondition = "01">
+			<action type = "0x02" value = "40800000"/>
+			<action type = "0x02" value = "40800000"/>
+			<action type = "0x02" value = "40800000"/>
+			<action type = "0x02" value = "40800000"/>
+			<action type = "0x02" value = "40800000"/>
+			<action type = "0x02" value = "40800000"/>
+			<action type = "0xAE" value = "3f800000"/>
+		</mod>
+	</modifications>
+</movesetPatch>
