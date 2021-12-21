@@ -1462,6 +1462,10 @@ namespace lava
 												std::size_t tempValue = tempTarget.getParamValueNum();
 												if (tempType != SIZE_MAX && tempValue != SIZE_MAX)
 												{
+													doScalarActionPrint = 0;
+													doScalarFinalPrint = 0;
+													doFloatActionPrint = 0;
+													doFloatFinalPrint = 0;
 													if (tempType == lava::movesetParamTypes::varTy_SCLR)
 													{
 														doScalarActionPrint = 1;
@@ -1471,13 +1475,6 @@ namespace lava
 													{
 														doFloatActionPrint = 1;
 														doFloatFinalPrint = 1;
-													}
-													else
-													{
-														doScalarActionPrint = 0;
-														doScalarFinalPrint = 0;
-														doFloatActionPrint = 0;
-														doFloatFinalPrint = 0;
 													}
 													tempTarget.updateParamType(currParamVals.getParamTypeNum());
 													tempTarget.updateParamValue(currParamVals.getParamValueNum());
