@@ -4,25 +4,9 @@ namespace lava
 {
 	std::ofstream changelogStream = std::ofstream();
 
-	bool hexStrComp(const std::string& str1, const std::string& str2)
-	{
-		bool result = 0;
-		if (str1.size() == str2.size())
-		{
-			std::size_t len = str1.size();
-			std::size_t i = 0;
-			result = 1;
-			while (result && i < len)
-			{
-				result = str1[i] == str2[i] || str1[i] == 'X' || str2[i] == 'X' || str1[i] == 'x' || str2[i] == 'x';
-				i++;
-			}
-		}
-		return result;
-	}
 	bool isHexChar(char charIn)
 	{
-		return validHexChars.find(charIn) != std::string::npos;
+		return (validHexChars.find(charIn) != std::string::npos);
 	}
 	std::string sanitizeHexStrInput(const std::string& stringIn, bool XAllowed)
 	{
@@ -45,6 +29,39 @@ namespace lava
 			if (!lava::isHexChar(result[i]) && !(result[i] == 'X' && XAllowed))
 			{
 				result[i] = '0';
+			}
+		}
+		return result;
+	}
+	int parseXMLValueAsNum(const std::string& stringIn, bool allowNeg, int defaultVal)
+	{
+		int result = defaultVal;
+		std::string manipStr = stringIn;
+		int base = (manipStr.find("0x") == 0) ? 16 : 10;
+		char* res = nullptr;
+		result = std::strtol(manipStr.c_str(), &res, 16);
+		if (res != (manipStr.c_str() + manipStr.size()))
+		{
+			result = defaultVal;
+		}
+		if (result < 0 && !allowNeg)
+		{
+			result = defaultVal;
+		}
+		return result;
+	}
+	bool hexStrComp(const std::string& str1, const std::string& str2)
+	{
+		bool result = 0;
+		if (str1.size() == str2.size())
+		{
+			std::size_t len = str1.size();
+			std::size_t i = 0;
+			result = 1;
+			while (result && i < len)
+			{
+				result = str1[i] == str2[i] || str1[i] == 'X' || str2[i] == 'X' || str1[i] == 'x' || str2[i] == 'x';
+				i++;
 			}
 		}
 		return result;
@@ -89,37 +106,11 @@ namespace lava
 								}
 								else if (targetAttr.name() == "paramIndex")
 								{
-									std::string manipStr = targetAttr.as_string();
-									if (manipStr.find("0x") == 0)
-									{
-										manipStr = manipStr.substr(2, std::string::npos);
-										currTarget.paramIndex = std::stoi(manipStr, nullptr, 16);
-									}
-									else
-									{
-										currTarget.paramIndex = targetAttr.as_int(INT_MAX);
-										if (currTarget.paramIndex < 0)
-										{
-											currTarget.paramIndex = INT_MAX;
-										}
-									}
+									currTarget.paramIndex = lava::parseXMLValueAsNum(targetAttr.as_string(), 0, INT_MAX);
 								}
 								else if (targetAttr.name() == "paramType")
 								{
-									std::string manipStr = targetAttr.as_string();
-									if (manipStr.find("0x") == 0)
-									{
-										manipStr = manipStr.substr(2, std::string::npos);
-										currTarget.paramType = std::stoi(manipStr, nullptr, 16);
-									}
-									else
-									{
-										currTarget.paramType = targetAttr.as_int(INT_MAX);
-										if (currTarget.paramType < 0)
-										{
-											currTarget.paramType = INT_MAX;
-										}
-									}
+									currTarget.paramType = lava::parseXMLValueAsNum(targetAttr.as_string(), 0, INT_MAX);
 								}
 							}
 							if (currTarget.paramIndex != INT_MAX)
@@ -152,37 +143,11 @@ namespace lava
 								}
 								else if (patchModAttr.name() == "extraCondition")
 								{
-									std::string manipStr = patchModAttr.as_string();
-									if (manipStr.find("0x") == 0)
-									{
-										manipStr = manipStr.substr(2, std::string::npos);
-										currMod.extraCondition = std::stoi(manipStr, nullptr, 16);
-									}
-									else
-									{
-										currMod.extraCondition = patchModAttr.as_int(INT_MAX);
-										if (currMod.extraCondition < 0)
-										{
-											currMod.extraCondition = lava::extraConditionTypes::exCon_NULL;
-										}
-									}
+									currMod.extraCondition = lava::parseXMLValueAsNum(patchModAttr.as_string(), 0, INT_MAX);
 								}
 								else if (patchModAttr.name() == "evalMethod")
 								{
-									std::string manipStr = patchModAttr.as_string();
-									if (manipStr.find("0x") == 0)
-									{
-										manipStr = manipStr.substr(2, std::string::npos);
-										currMod.evalMethod = std::stoi(manipStr, nullptr, 16);
-									}
-									else
-									{
-										currMod.evalMethod = patchModAttr.as_int(INT_MAX);
-										if (currMod.evalMethod < 0)
-										{
-											currMod.evalMethod = lava::matchEvaluationMethodTypes::mtEvl_EQUALS;
-										}
-									}
+									currMod.evalMethod = lava::parseXMLValueAsNum(patchModAttr.as_string(), 0, INT_MAX);
 								}
 								else if (patchModAttr.name() == "lock")
 								{
@@ -190,20 +155,7 @@ namespace lava
 								}
 								else if (patchModAttr.name() == "paramIndexRedirect")
 								{
-									std::string manipStr = patchModAttr.as_string();
-									if (manipStr.find("0x") == 0)
-									{
-										manipStr = manipStr.substr(2, std::string::npos);
-										currMod.paramIndexRedirect = std::stoi(manipStr, nullptr, 16);
-									}
-									else
-									{
-										currMod.paramIndexRedirect = patchModAttr.as_int(INT_MAX);
-										if (currMod.paramIndexRedirect < 0)
-										{
-											currMod.paramIndexRedirect = INT_MAX;
-										}
-									}
+									currMod.paramIndexRedirect = lava::parseXMLValueAsNum(patchModAttr.as_string(), 0, INT_MAX);
 								}
 							}
 							std::size_t actionNumber = 0;
@@ -219,20 +171,7 @@ namespace lava
 									}
 									else if (actionAttr.name() == "type")
 									{
-										std::string manipStr = actionAttr.as_string();
-										if (manipStr.find("0x") == 0)
-										{
-											manipStr = manipStr.substr(2, std::string::npos);
-											currAction.actionType = std::stoi(manipStr, nullptr, 16);
-										}
-										else
-										{
-											currAction.actionType = actionAttr.as_int(INT_MAX);
-											if (currAction.actionType < 0)
-											{
-												currAction.actionType = INT_MAX;
-											}
-										}
+										currAction.actionType = lava::parseXMLValueAsNum(actionAttr.as_string(), 0, INT_MAX);
 									}
 									else if (actionAttr.name() == "value")
 									{
@@ -261,54 +200,15 @@ namespace lava
 							}
 							else if (directApplyAttr.name() == "type")
 							{
-								std::string manipStr = directApplyAttr.as_string();
-								if (manipStr.find("0x") == 0)
-								{
-									manipStr = manipStr.substr(2, std::string::npos);
-									templateAction = std::stoi(manipStr, nullptr, 16);
-								}
-								else
-								{
-									templateAction = directApplyAttr.as_int(INT_MAX);
-									if (templateAction < 0)
-									{
-										templateAction = INT_MAX;
-									}
-								}
+								templateAction = lava::parseXMLValueAsNum(directApplyAttr.as_string(), 0, INT_MAX);
 							}
 							else if (directApplyAttr.name() == "evalMethod")
 							{
-								std::string manipStr = directApplyAttr.as_string();
-								if (manipStr.find("0x") == 0)
-								{
-									manipStr = manipStr.substr(2, std::string::npos);
-									templateEvalMethod = std::stoi(manipStr, nullptr, 16);
-								}
-								else
-								{
-									templateEvalMethod = directApplyAttr.as_int(INT_MAX);
-									if (templateEvalMethod < 0)
-									{
-										templateEvalMethod = INT_MAX;
-									}
-								}
+								templateEvalMethod = lava::parseXMLValueAsNum(directApplyAttr.as_string(), 0, INT_MAX);
 							}
 							else if (directApplyAttr.name() == "paramIndexRedirect")
 							{
-								std::string manipStr = directApplyAttr.as_string();
-								if (manipStr.find("0x") == 0)
-								{
-									manipStr = manipStr.substr(2, std::string::npos);
-									templateRedirectParam = std::stoi(manipStr, nullptr, 16);
-								}
-								else
-								{
-									templateRedirectParam = directApplyAttr.as_int(INT_MAX);
-									if (templateRedirectParam < 0)
-									{
-										templateRedirectParam = INT_MAX;
-									}
-								}
+								templateRedirectParam = lava::parseXMLValueAsNum(directApplyAttr.as_string(), 0, INT_MAX);
 							}
 							else if (directApplyAttr.name() == "lock")
 							{
@@ -370,7 +270,7 @@ namespace lava
 		}
 		else
 		{
-			std::cerr << "Failed to parse moveset patch XML file: " << parseRes.description() << "\n";
+			std::cerr << "[ERROR] Failed to parse moveset patch XML file: " << parseRes.description() << "\n\n";
 		}
 		return result;
 	}
@@ -384,7 +284,7 @@ namespace lava
 		body.resize(sourceSize);
 		sourceStream.read(body.data(), sourceSize);
 		size = body.size();
-		std::cout << "Populated array with " << size << " byte(s) of data.\n";
+		std::cout << "Loaded " << size << " byte(s) of data.\n\n";
 	}
 	std::vector<char> byteArray::getBytes(std::size_t numToGet, std::size_t startIndex, std::size_t& numGotten)
 	{
@@ -502,27 +402,27 @@ namespace lava
 				filePath = filePathIn;
 				std::size_t numGotten;
 				std::cout << "Header Info:\n" << std::hex;
-				movesetLength = lava::hexVecToNum(contents.getBytes(4, 0x60, numGotten));
-				dataLength = lava::hexVecToNum(contents.getBytes(4, 0x64, numGotten));
-				dataOffset = 0x80;
+				movesetLength = lava::hexVecToNum(contents.getBytes(4, lava::PACFileHeaderLength, numGotten));
+				dataLength = lava::hexVecToNum(contents.getBytes(4, lava::PACFileHeaderLength + 0x4, numGotten));
+				dataOffset = lava::PACFileHeaderLength + lava::movesetHeaderLength;
 				std::cout << "\tMoveset Section[0x80]: Total Length = 0x" << movesetLength << ", Data Length = 0x" << dataLength << "\n";
-				offsetSectionCount = lava::hexVecToNum(contents.getBytes(4, 0x68, numGotten));
+				offsetSectionCount = lava::hexVecToNum(contents.getBytes(4, lava::PACFileHeaderLength + 0x8, numGotten));
 				offsetSectionOffset = dataOffset + dataLength;
 				std::cout << "\tOffset Section[0x" << offsetSectionOffset << "]: Entry Count = 0x" << offsetSectionCount << "\n";
-				dataTableCount = lava::hexVecToNum(contents.getBytes(4, 0x6C, numGotten));
+				dataTableCount = lava::hexVecToNum(contents.getBytes(4, lava::PACFileHeaderLength + 0xC, numGotten));
 				dataTableOffset = offsetSectionOffset + (offsetSectionCount * 0x4);
 				std::cout << "\tData Table Section[0x" << dataTableOffset << "]: Entry Count = 0x" << dataTableCount << "\n";
-				externalDataCount = lava::hexVecToNum(contents.getBytes(4, 0x70, numGotten));
+				externalDataCount = lava::hexVecToNum(contents.getBytes(4, lava::PACFileHeaderLength + 0x10, numGotten));
 				externalDataOffset = dataTableOffset + (dataTableCount * 0x8);
 				std::cout << "\tExternal Data Table Section[0x" << externalDataOffset << "]: Entry Count = 0x" << externalDataCount << "\n";
 				tablesEnd = externalDataOffset + (externalDataCount * 0x8);
 				std::cout << "\tTables End[0x" << tablesEnd << "]";
 				std::cout << "\n" << std::dec;
-				std::cout << "\tData Table Contents:\n";
-				summarizeTable(dataTableOffset, dataTableCount, 0x80, "\t\t");
+				/*std::cout << "\tData Table Contents:\n";
+				summarizeTable(dataTableOffset, dataTableCount, lava::PACFileHeaderLength + lava::movesetHeaderLength, "\t\t");
 				std::cout << "\tExternal Data Table Contents:\n";
-				summarizeTable(externalDataOffset, externalDataCount, 0x0, "\t\t");
-
+				summarizeTable(externalDataOffset, externalDataCount, 0x0, "\t\t");*/
+				std::cout << "\n";
 				if (logStream.good())
 				{
 					logStream << "Header Info:\n" << std::hex;
@@ -710,8 +610,8 @@ namespace lava
 						if (currTarget->paramType == INT_MAX || currParamVals.getParamTypeNum() == currTarget->paramType)
 						{
 							// Report location of current ping, as well as its paramOffset. Note, the first paramOffset we report is non .pac adjusted since that's the one you'll see in PSAC, which is what I expect most people will be looking for. The adjusted value is provided second.
-							logStream << "\t[0x" << numToHexStringWithPadding(currPing, 8) << "]: Params @ 0x" << numToHexStringWithPadding(paramOffsetNum - dataOffset, 8);
-							std::cout << "\t[0x" << numToHexStringWithPadding(currPing, 8) << "]: Params @ 0x" << numToHexStringWithPadding(paramOffsetNum - dataOffset, 8);
+							logStream << "\t[0x" << numToHexStringWithPadding(currPing - dataOffset, 8) << "]: Params @ 0x" << numToHexStringWithPadding(paramOffsetNum - dataOffset, 8);
+							std::cout << "\t[0x" << numToHexStringWithPadding(currPing - dataOffset, 8) << "]: Params @ 0x" << numToHexStringWithPadding(paramOffsetNum - dataOffset, 8);
 
 							// Initialize values for loop
 							bool redirectUsed = 0;
