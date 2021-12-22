@@ -384,7 +384,7 @@ namespace lava
 		body.resize(sourceSize);
 		sourceStream.read(body.data(), sourceSize);
 		size = body.size();
-		std::cout << "Populated array with " << size << " byte(s) of data.\n";
+		std::cout << "Loaded " << size << " byte(s) of data.\n\n";
 	}
 	std::vector<char> byteArray::getBytes(std::size_t numToGet, std::size_t startIndex, std::size_t& numGotten)
 	{
@@ -502,27 +502,27 @@ namespace lava
 				filePath = filePathIn;
 				std::size_t numGotten;
 				std::cout << "Header Info:\n" << std::hex;
-				movesetLength = lava::hexVecToNum(contents.getBytes(4, 0x60, numGotten));
-				dataLength = lava::hexVecToNum(contents.getBytes(4, 0x64, numGotten));
-				dataOffset = 0x80;
+				movesetLength = lava::hexVecToNum(contents.getBytes(4, lava::PACFileHeaderLength, numGotten));
+				dataLength = lava::hexVecToNum(contents.getBytes(4, lava::PACFileHeaderLength + 0x4, numGotten));
+				dataOffset = lava::PACFileHeaderLength + lava::movesetHeaderLength;
 				std::cout << "\tMoveset Section[0x80]: Total Length = 0x" << movesetLength << ", Data Length = 0x" << dataLength << "\n";
-				offsetSectionCount = lava::hexVecToNum(contents.getBytes(4, 0x68, numGotten));
+				offsetSectionCount = lava::hexVecToNum(contents.getBytes(4, lava::PACFileHeaderLength + 0x8, numGotten));
 				offsetSectionOffset = dataOffset + dataLength;
 				std::cout << "\tOffset Section[0x" << offsetSectionOffset << "]: Entry Count = 0x" << offsetSectionCount << "\n";
-				dataTableCount = lava::hexVecToNum(contents.getBytes(4, 0x6C, numGotten));
+				dataTableCount = lava::hexVecToNum(contents.getBytes(4, lava::PACFileHeaderLength + 0xC, numGotten));
 				dataTableOffset = offsetSectionOffset + (offsetSectionCount * 0x4);
 				std::cout << "\tData Table Section[0x" << dataTableOffset << "]: Entry Count = 0x" << dataTableCount << "\n";
-				externalDataCount = lava::hexVecToNum(contents.getBytes(4, 0x70, numGotten));
+				externalDataCount = lava::hexVecToNum(contents.getBytes(4, lava::PACFileHeaderLength + 0x10, numGotten));
 				externalDataOffset = dataTableOffset + (dataTableCount * 0x8);
 				std::cout << "\tExternal Data Table Section[0x" << externalDataOffset << "]: Entry Count = 0x" << externalDataCount << "\n";
 				tablesEnd = externalDataOffset + (externalDataCount * 0x8);
 				std::cout << "\tTables End[0x" << tablesEnd << "]";
 				std::cout << "\n" << std::dec;
-				std::cout << "\tData Table Contents:\n";
-				summarizeTable(dataTableOffset, dataTableCount, 0x80, "\t\t");
+				/*std::cout << "\tData Table Contents:\n";
+				summarizeTable(dataTableOffset, dataTableCount, lava::PACFileHeaderLength + lava::movesetHeaderLength, "\t\t");
 				std::cout << "\tExternal Data Table Contents:\n";
-				summarizeTable(externalDataOffset, externalDataCount, 0x0, "\t\t");
-
+				summarizeTable(externalDataOffset, externalDataCount, 0x0, "\t\t");*/
+				std::cout << "\n";
 				if (logStream.good())
 				{
 					logStream << "Header Info:\n" << std::hex;
@@ -693,8 +693,8 @@ namespace lava
 						if (currTarget->paramType == INT_MAX || currParamVals.getParamTypeNum() == currTarget->paramType)
 						{
 							// Report location of current ping, as well as its paramOffset. Note, the first paramOffset we report is non .pac adjusted since that's the one you'll see in PSAC, which is what I expect most people will be looking for. The adjusted value is provided second.
-							logStream << "\t[0x" << numToHexStringWithPadding(currPing, 8) << "]: Params @ 0x" << numToHexStringWithPadding(paramOffsetNum - dataOffset, 8);
-							std::cout << "\t[0x" << numToHexStringWithPadding(currPing, 8) << "]: Params @ 0x" << numToHexStringWithPadding(paramOffsetNum - dataOffset, 8);
+							logStream << "\t[0x" << numToHexStringWithPadding(currPing - dataOffset, 8) << "]: Params @ 0x" << numToHexStringWithPadding(paramOffsetNum - dataOffset, 8);
+							std::cout << "\t[0x" << numToHexStringWithPadding(currPing - dataOffset, 8) << "]: Params @ 0x" << numToHexStringWithPadding(paramOffsetNum - dataOffset, 8);
 
 							// Initialize values for loop
 							bool redirectUsed = 0;

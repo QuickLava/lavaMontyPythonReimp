@@ -8,7 +8,8 @@ namespace lava
 	extern std::ofstream changelogStream;
 	constexpr std::size_t canonParamLengthStr = 8;
 	constexpr std::size_t canonParamLengthInBytes = canonParamLengthStr / 2;
-	constexpr std::size_t globalBaseOffset = 0x80;
+	constexpr std::size_t PACFileHeaderLength = 0x60;
+	constexpr std::size_t movesetHeaderLength = 0x20;
 	constexpr float floatDenominator = 0xEA60;
 	constexpr float attributefloatDenominator = 0x3F800000;
 	constexpr std::size_t canonAttributeSectionLength = 0x2E4;
