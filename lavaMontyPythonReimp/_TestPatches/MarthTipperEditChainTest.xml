@@ -1,8 +1,8 @@
 <?xml version="1.0"?> 
 <movesetPatch name = "Marth Slap Tipper Chain Test">
 	<targets>
-		<command name = "Offensive Collision" signature = "0x06000D00" paramIndex="0"/>
-		<command name = "Special Offensive Collision" signature = "0x06150F00" paramIndex="0"/>
+		<command name = "Offensive Collision"			signature = "06000D00" paramIndex = "0"/>
+		<command name = "Special Offensive Collision"	signature = "06150F00" paramIndex = "0"/>
 	</targets>
 	<modifications>
 		<mod match = "0041XXXX">
