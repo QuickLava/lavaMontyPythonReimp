@@ -1,18 +1,18 @@
 <?xml version="1.0"?> 
 <movesetPatch name = "SFX ID Replacement">
 	<targets>
-		<command name = "Sound Effect"					signature = "0A000100" paramIndex = "0"/>
-		<command name = "Sound Effect 2"				signature = "0A010100" paramIndex = "0"/>
-		<command name = "Sound Effect (Transient)"		signature = "0A020100" paramIndex = "0"/>
-		<command name = "Stop Sound Effect"				signature = "0A030100" paramIndex = "0"/>
-		<command name = "Victory"						signature = "0A050100" paramIndex = "0"/>
-		<command name = "Other Sound Effect (landing)"	signature = "0A090100" paramIndex = "0"/>
-		<command name = "Other Sound Effect (impact)"	signature = "0A0A0100" paramIndex = "0"/>
-		<command name = "Stepping Sound Effect"			signature = "0A010100" paramIndex = "0"/>
+		<command name = "Sound Effect" signature = "0x0A000100" paramIndex="0"/>
+		<command name = "Sound Effect 2" signature = "0x0A010100" paramIndex="0"/>
+		<command name = "Sound Effect (Transient)" signature = "0x0A020100" paramIndex="0"/>
+		<command name = "Stop Sound Effect" signature = "0x0A030100" paramIndex="0"/>
+		<command name = "Victory" signature = "0x0A050100" paramIndex="0"/>
+		<command name = "Other Sound Effect (landing)" signature = "0x0A090100" paramIndex="0"/>
+		<command name = "Other Sound Effect (impact)" signature = "0x0A0A0100" paramIndex="0"/>
+		<command name = "Stepping Sound Effect" signature = "0x0A010100" paramIndex="0"/>
 	</targets>
 	<modifications>
 	</modifications>
-	<directApply name = "Marth Sound Replacement" type = "0x00" lock = "00000000">
+	<directApply name = "Marth Sound Replacement">
 		00000696, 000052B1
 		00000697, 000052B2
 		00000698, 000052B3

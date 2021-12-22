@@ -1,17 +1,17 @@
 <?xml version="1.0"?> 
 <movesetPatch name = "External GFX File Replacement">
 	<targets>
-		<command name = "Graphic Effect"					signature = "11001000" paramIndex = "0" paramType = "0"/>
-		<command name = "Graphic Effect (Attached)"			signature = "11010A00" paramIndex = "0" paramType = "0"/>
-		<command name = "Graphic Effect (Attached)(+100)"	signature = "11010B00" paramIndex = "0" paramType = "0"/>
-		<command name = "Graphic Effect (Attached 2)"		signature = "11020A00" paramIndex = "0" paramType = "0"/>
-		<command name = "Graphic Effect (Stepping)"			signature = "111A1000" paramIndex = "0" paramType = "0"/>
-		<command name = "Graphic Effect (Landing)"			signature = "111B1000" paramIndex = "0" paramType = "0"/>
-		<command name = "Graphic Effect (Tumbling)"			signature = "111C1000" paramIndex = "0" paramType = "0"/>
-		<command name = "Graphic Effect (Attached 19)"		signature = "11190A00" paramIndex = "0" paramType = "0"/>
-		<command name = "Terminate Graphic Effect"			signature = "11150300" paramIndex = "0" paramType = "0"/>
-		<command name = "Sword Glow"						signature = "11031400" paramIndex = "11" paramType = "0"/>
-		<command name = "Sword/Hammer Glow"					signature = "11041700" paramIndex = "11" paramType = "0"/>
+		<command name = "Graphic Effect" signature = "0x11001000" paramIndex="0" paramType="0"/>
+		<command name = "Graphic Effect (Attached)" signature = "0x11010A00" paramIndex="0" paramType="0"/>
+		<command name = "Graphic Effect (Attached)(+100)" signature = "0x11010B00" paramIndex="0" paramType="0"/>
+		<command name = "Graphic Effect (Attached 2)" signature = "0x11020A00" paramIndex="0" paramType="0"/>
+		<command name = "Graphic Effect (Stepping)" signature = "0x111A1000" paramIndex="0" paramType="0"/>
+		<command name = "Graphic Effect (Landing)" signature = "0x111B1000" paramIndex="0" paramType="0"/>
+		<command name = "Graphic Effect (Tumbling)" signature = "0x111C1000" paramIndex="0" paramType="0"/>
+		<command name = "Graphic Effect (Attached 19)" signature = "0x11190A00" paramIndex="0" paramType="0"/>
+		<command name = "Terminate Graphic Effect" signature = "0x11150300" paramIndex="0" paramType="0"/>
+		<command name = "Sword Glow" signature = "11031400" paramIndex = "0xB" paramType="0"/>
+		<command name = "Sword/Hammer Glow" signature = "11041700" paramIndex = "11" paramType="0"/>
 	</targets>
 	<modifications>
 		<mod match = "000DXXXX" lock = "00001111">
