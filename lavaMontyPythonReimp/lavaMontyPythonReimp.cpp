@@ -37,17 +37,16 @@ namespace lava
 	{
 		int result = defaultVal;
 		std::string manipStr = stringIn;
-		if (manipStr.find("0x") == 0)
+		int base = (manipStr.find("0x") == 0) ? 16 : 10;
+		char* res = nullptr;
+		result = std::strtol(manipStr.c_str(), &res, 16);
+		if (res != (manipStr.c_str() + manipStr.size()))
 		{
-			result = std::stoi(lava::sanitizeHexStrInput(manipStr, 0), nullptr, 16);
+			result = defaultVal;
 		}
-		else
+		if (result < 0 && !allowNeg)
 		{
-			result = std::stoi(lava::sanitizeHexStrInput(manipStr, 0), nullptr, 10);
-			if (result < 0 && !allowNeg)
-			{
-				result = defaultVal;
-			}
+			result = defaultVal;
 		}
 		return result;
 	}
