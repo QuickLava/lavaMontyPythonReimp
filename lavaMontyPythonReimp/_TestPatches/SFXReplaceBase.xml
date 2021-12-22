@@ -12,7 +12,7 @@
 	</targets>
 	<modifications>
 	</modifications>
-	<directApply name = "Marth Sound Replacement">
+	<directApply name = "Sound Replacement">
 		<!--Add entries as seen below. Left side is ID to replace, right side is ID to replace with.-->
 		00000696, 000052B1
 	</directApply>

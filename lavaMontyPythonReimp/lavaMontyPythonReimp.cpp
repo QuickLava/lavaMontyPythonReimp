@@ -20,6 +20,10 @@ namespace lava
 		}
 		return result;
 	}
+	bool isHexChar(char charIn)
+	{
+		return validHexChars.find(charIn) != std::string::npos;
+	}
 	std::string sanitizeHexStrInput(const std::string& stringIn, bool XAllowed)
 	{
 		std::string result = stringIn;
@@ -36,14 +40,11 @@ namespace lava
 		{
 			result = std::string(8 - result.size(), '0') + result;
 		}
-		if (!XAllowed)
+		for (std::size_t i = 0; i < 8; i++)
 		{
-			for (std::size_t i = 0; i < 8; i++)
+			if (!lava::isHexChar(result[i]) && !(result[i] == 'X' && XAllowed))
 			{
-				if (result[i] == 'X')
-				{
-					result[i] = 0;
-				}
+				result[i] = '0';
 			}
 		}
 		return result;
@@ -172,14 +173,14 @@ namespace lava
 									if (manipStr.find("0x") == 0)
 									{
 										manipStr = manipStr.substr(2, std::string::npos);
-										currMod.matchMethod = std::stoi(manipStr, nullptr, 16);
+										currMod.evalMethod = std::stoi(manipStr, nullptr, 16);
 									}
 									else
 									{
-										currMod.matchMethod = patchModAttr.as_int(INT_MAX);
-										if (currMod.matchMethod < 0)
+										currMod.evalMethod = patchModAttr.as_int(INT_MAX);
+										if (currMod.evalMethod < 0)
 										{
-											currMod.matchMethod = lava::matchEvaluationMethodTypes::mtEvl_EQUALS;
+											currMod.evalMethod = lava::matchEvaluationMethodTypes::mtEvl_EQUALS;
 										}
 									}
 								}
@@ -249,6 +250,7 @@ namespace lava
 					{
 						std::string baseName = "DirectApply";
 						unsigned int templateAction = lava::modActionTypes::actTy_REPLACE;
+						int templateEvalMethod = matchEvaluationMethodTypes::mtEvl_EQUALS;
 						int templateRedirectParam = INT_MAX;
 						std::string templateLock = "00000000";
 						for (pugi::xml_attribute directApplyAttr = patchChild.first_attribute(); directApplyAttr; directApplyAttr = directApplyAttr.next_attribute())
@@ -271,6 +273,23 @@ namespace lava
 									if (templateAction < 0)
 									{
 										templateAction = INT_MAX;
+									}
+								}
+							}
+							else if (directApplyAttr.name() == "evalMethod")
+							{
+								std::string manipStr = directApplyAttr.as_string();
+								if (manipStr.find("0x") == 0)
+								{
+									manipStr = manipStr.substr(2, std::string::npos);
+									templateEvalMethod = std::stoi(manipStr, nullptr, 16);
+								}
+								else
+								{
+									templateEvalMethod = directApplyAttr.as_int(INT_MAX);
+									if (templateEvalMethod < 0)
+									{
+										templateEvalMethod = INT_MAX;
 									}
 								}
 							}
@@ -327,11 +346,13 @@ namespace lava
 													lava::movesetPatchMod tempMod;
 													tempMod.name = baseName + "[" + std::to_string(entryNum) + "]";
 													tempMod.locked = templateLock;
-													tempMod.match = match;
+													tempMod.evalMethod = templateEvalMethod;
 													tempMod.paramIndexRedirect = templateRedirectParam;
+													tempMod.match = lava::sanitizeHexStrInput(match, 1);
 													lava::movesetPatchModAction tempAction;
+													tempAction.name = "Action #0";
 													tempAction.actionType = templateAction;
-													tempAction.value = value;
+													tempAction.value = lava::sanitizeHexStrInput(value, 0);
 													tempMod.actions.push_back(tempAction);
 													currPatch.modifications.push_back(tempMod);
 												}
@@ -731,7 +752,7 @@ namespace lava
 									}
 								}
 								// Actually evaluate the various methods.
-								switch (currMod->matchMethod)
+								switch (currMod->evalMethod)
 								{
 									case lava::matchEvaluationMethodTypes::mtEvl_EQUALS:
 									{
@@ -839,7 +860,7 @@ namespace lava
 									// Print info on the match method
 									logStream << "\t\tFound match (Match:" << currMod->match << " ";
 									std::cout << "\t\tFound match (Match:" << currMod->match << " ";
-									switch (currMod->matchMethod)
+									switch (currMod->evalMethod)
 									{
 										case lava::matchEvaluationMethodTypes::mtEvl_EQUALS:
 										{
