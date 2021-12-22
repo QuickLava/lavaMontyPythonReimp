@@ -1,7 +1,7 @@
 <?xml version="1.0"?> 
 <movesetPatch name = "Attribute Hack Test (INT)">
 	<targets>
-		<command name = "[ATTR] Jump Startup Time" signature = "DEADBEEF" paramIndex = "12" paramType = "0xFF00"/>
+		<command name = "[ATTR] Jump Startup Time" signature = "0xDEADBEEF" paramIndex="12" paramType="0xFF00"/>
 	</targets>
 	<modifications>
 		<mod match = "00000004" evalMethod = "0">
@@ -15,8 +15,8 @@
 </movesetPatch>
 <movesetPatch name = "Attribute Hack Test (FLT)">
 	<targets>
-		<command name = "[ATTR] Jump V Initial Velocity"	signature = "DEADBEEF" paramIndex = "14" paramType = "0xFF01"/>
-		<command name = "[ATTR] Hop V Initial Velocity"		signature = "DEADBEEF" paramIndex = "17" paramType = "0xFF01"/>
+		<command name = "[ATTR] Jump V Initial Velocity" signature = "0xDEADBEEF" paramIndex="14" paramType="0xFF01"/>
+		<command name = "[ATTR] Hop V Initial Velocity" signature = "0xDEADBEEF" paramIndex="17" paramType="0xFF01"/>
 	</targets>
 	<modifications>
 		<mod match = "401F0A3D" evalMethod = "0">

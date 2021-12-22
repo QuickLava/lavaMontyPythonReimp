@@ -1,25 +1,25 @@
 <?xml version="1.0"?> 
 <movesetPatch name = "Find Variable Manips">
 	<targets>
-		<command name = "Basic Variable Set" 			signature = "12000200" paramIndex = "1" paramType = "5"/>
-		<command name = "Basic Variable Add"			signature = "12010200" paramIndex = "1" paramType = "5"/>
-		<command name = "Basic Variable Subtract"		signature = "12020200" paramIndex = "1" paramType = "5"/>
-		<command name = "Basic Variable Multiply"		signature = "120D0200" paramIndex = "1" paramType = "5"/>
-		<command name = "Basic Variable Divide"			signature = "120E0200" paramIndex = "1" paramType = "5"/>
-		<command name = "Basic Variable Increment"		signature = "12030200" paramIndex = "0" paramType = "5"/>
-		<command name = "Basic Variable Decrement"		signature = "12040200" paramIndex = "0" paramType = "5"/>
-		<command name = "Basic Variable Random"			signature = "12050300" paramIndex = "2" paramType = "5"/>
-		<command name = "Basic Variable Set Absolute"	signature = "12110200" paramIndex = "1" paramType = "5"/>
-		<command name = "Float Variable Set" 			signature = "12060200" paramIndex = "1" paramType = "5"/>
-		<command name = "Float Variable Add"			signature = "12070200" paramIndex = "1" paramType = "5"/>
-		<command name = "Float Variable Subtract"		signature = "12080200" paramIndex = "1" paramType = "5"/>
-		<command name = "Float Variable Multiply"		signature = "120F0200" paramIndex = "1" paramType = "5"/>
-		<command name = "Float Variable Divide"			signature = "12100200" paramIndex = "1" paramType = "5"/>
-		<command name = "Float Variable Random"			signature = "12090300" paramIndex = "2" paramType = "5"/>
-		<command name = "Float Variable Set Absolute"	signature = "12120200" paramIndex = "1" paramType = "5"/>
-		<command name = "Bit Variable Set"				signature = "120A0200" paramIndex = "1" paramType = "5"/>
-		<command name = "Bit Variable Clear"			signature = "120B0200" paramIndex = "1" paramType = "5"/>
-		<command name = "If (1 Var)"					signature = "000A0200" paramIndex = "1" paramType = "5"/>
+		<command name = "Basic Variable Set" 			signature = "0x12000200" paramIndex="1" paramType = "5"/>
+		<command name = "Basic Variable Add"			signature = "0x12010200" paramIndex="1" paramType = "5"/>
+		<command name = "Basic Variable Subtract"		signature = "0x12020200" paramIndex="1" paramType = "5"/>
+		<command name = "Basic Variable Multiply"		signature = "0x120D0200" paramIndex="1" paramType = "5"/>
+		<command name = "Basic Variable Divide"			signature = "0x120E0200" paramIndex="1" paramType = "5"/>
+		<command name = "Basic Variable Increment"		signature = "0x12030200" paramIndex="0" paramType = "5"/>
+		<command name = "Basic Variable Decrement"		signature = "0x12040200" paramIndex="0" paramType = "5"/>
+		<command name = "Basic Variable Random"			signature = "0x12050300" paramIndex="2" paramType = "5"/>
+		<command name = "Basic Variable Set Absolute"	signature = "0x12110200" paramIndex="1" paramType = "5"/>
+		<command name = "Float Variable Set" 			signature = "0x12060200" paramIndex="1" paramType = "5"/>
+		<command name = "Float Variable Add"			signature = "0x12070200" paramIndex="1" paramType = "5"/>
+		<command name = "Float Variable Subtract"		signature = "0x12080200" paramIndex="1" paramType = "5"/>
+		<command name = "Float Variable Multiply"		signature = "0x120F0200" paramIndex="1" paramType = "5"/>
+		<command name = "Float Variable Divide"			signature = "0x12100200" paramIndex="1" paramType = "5"/>
+		<command name = "Float Variable Random"			signature = "0x12090300" paramIndex="2" paramType = "5"/>
+		<command name = "Float Variable Set Absolute"	signature = "0x12120200" paramIndex="1" paramType = "5"/>
+		<command name = "Bit Variable Set"				signature = "0x120A0200" paramIndex="1" paramType = "5"/>
+		<command name = "Bit Variable Clear"			signature = "0x120B0200" paramIndex="1" paramType = "5"/>
+		<command name = "If (1 Var)"					signature = "0x000A0200" paramIndex="1" paramType = "5"/>
 	</targets>
 	<modifications>
 		<mod name = "IC-Basic"	match = "00XXXXXX">
