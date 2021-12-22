@@ -39,7 +39,7 @@ namespace lava
 		std::string manipStr = stringIn;
 		int base = (manipStr.find("0x") == 0) ? 16 : 10;
 		char* res = nullptr;
-		result = std::strtol(manipStr.c_str(), &res, 16);
+		result = std::strtol(manipStr.c_str(), &res, base);
 		if (res != (manipStr.c_str() + manipStr.size()))
 		{
 			result = defaultVal;

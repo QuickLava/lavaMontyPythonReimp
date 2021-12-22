@@ -1,5 +1,5 @@
 <?xml version="1.0"?> 
-<movesetPatch name = "Marth External GFX File Replacement (For EX Clone w/ GFX ID 0x43)">
+<movesetPatch name = "Marth External GFX File Replacement (For EX Clone w/ GFX ID 0x43, ef_custom43)">
 	<targets>
 		<command name = "Graphic Effect" signature = "0x11001000" paramIndex="0" paramType="0"/>
 		<command name = "Graphic Effect (Attached)" signature = "0x11010A00" paramIndex="0" paramType="0"/>

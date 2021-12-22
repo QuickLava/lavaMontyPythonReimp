@@ -82,6 +82,16 @@ int main(int argc, char* argv[])
 						lava::movesetFile moveset;
 						if (moveset.init(fileIn, lava::changelogStream))
 						{
+							lava::changelogStream << "Patches:\n";
+							std::cout << "Patches:\n";
+							for (std::size_t patchNameItr = 0; patchNameItr < testPatches.size(); patchNameItr++)
+							{
+								lava::changelogStream << "\t" << testPatches[patchNameItr].name << "\n";
+								std::cout << "\t" << testPatches[patchNameItr].name << "\n";
+							}
+							lava::changelogStream << "\n";
+							std::cout << "\n";
+
 							std::cout << "Note: From here on, all addresses are relative to start of Moveset Data Section (as they are in PSAC). For .pac relative addresses, add 0x" << lava::numToHexStringWithPadding(lava::PACFileHeaderLength + lava::movesetHeaderLength, 2) << ".\n\n";
 							lava::changelogStream << "Note: From here on, all addresses are relative to start of Moveset Data Section (as they are in PSAC). For .pac relative addresses, add 0x" << lava::numToHexStringWithPadding(lava::PACFileHeaderLength + lava::movesetHeaderLength, 2) << ".\n\n";
 							for (std::size_t i = 0; i < testPatches.size(); i++)

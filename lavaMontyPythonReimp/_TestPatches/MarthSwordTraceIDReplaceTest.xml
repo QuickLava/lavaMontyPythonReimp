@@ -1,5 +1,5 @@
 <?xml version="1.0"?> 
-<movesetPatch name = "Replace Marth Sword Trail IDs (For EX Clone at ef_custom43)">
+<movesetPatch name = "Marth Sword Trail ID Replacement (For EX Clone w/ GFX ID 0x43, ef_custom43)">
 	<targets>
 		<command name = "Sword Glow" signature = "11031400" paramIndex = "0" paramType="0"/>
 		<command name = "Sword/Hammer Glow" signature = "11041700" paramIndex = "0" paramType="0"/>
