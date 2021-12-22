@@ -15,6 +15,7 @@ namespace lava
 	constexpr std::size_t canonAttributeLengthInBytes = 0x4;
 	constexpr std::size_t canonAttributeSectionCount = canonAttributeSectionLength/canonAttributeLengthInBytes;
 	const std::string changelogSuffix = "_changelog.txt";
+	const std::string validHexChars = "0123456789ABCDEF";
 
 	constexpr size_t attributeHackActivationSignature = 0xDEADBEEF;
 
@@ -98,6 +99,7 @@ namespace lava
 		extraConditionTypeCount
 	};
 	
+	bool isHexChar(char charIn);
 	std::string sanitizeHexStrInput(const std::string& stringIn, bool XAllowed = 0);
 	bool hexStrComp(const std::string& str1, const std::string& str2);
 
@@ -133,7 +135,7 @@ namespace lava
 	{
 		std::string name = "";
 		std::string match = "FFFFFFFF";
-		int matchMethod = matchEvaluationMethodTypes::mtEvl_EQUALS;
+		int evalMethod = matchEvaluationMethodTypes::mtEvl_EQUALS;
 		std::string locked = "00000000";
 		int paramIndexRedirect = INT_MAX;
 		int extraCondition = extraConditionTypes::exCon_NULL;

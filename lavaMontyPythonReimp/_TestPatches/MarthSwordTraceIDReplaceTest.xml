@@ -1,0 +1,25 @@
+<?xml version="1.0"?> 
+<movesetPatch name = "Replace Marth Sword Trail IDs (For EX Clone at ef_custom43)">
+	<targets>
+		<command name = "Sword Glow" signature = "11031400" paramIndex = "0" paramType="0"/>
+		<command name = "Sword/Hammer Glow" signature = "11041700" paramIndex = "0" paramType="0"/>
+	</targets>
+	<modifications>
+		<mod name = "Normal Trace" match = "00000009">
+			<action type = "0x00" value = "0000032B"/>
+		</mod>
+		<mod name = "Dancing Blade Hi Trace" match = "00000019">
+			<action type = "0x00" value = "0000032D"/>
+		</mod>
+		<mod name = "Dancing Blade Mid Trace" match = "0000001A">
+			<action type = "0x00" value = "0000032F"/>
+		</mod>
+		<mod name = "Dancing Blade Low Trace" match = "0000001B">
+			<action type = "0x00" value = "0000032E"/>
+		</mod>
+		<mod name = "Shieldbreaker Trace" match = "0000001C">
+			<action type = "0x00" value = "0000032C"/>
+		</mod>
+	</modifications>
+</movesetPatch>
+

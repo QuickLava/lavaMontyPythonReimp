@@ -1,5 +1,5 @@
 <?xml version="1.0"?> 
-<movesetPatch name = "SFX ID Replacement">
+<movesetPatch name = "SFX ID Replacement (For EX Clone w/ SFX ID 353)">
 	<targets>
 		<command name = "Sound Effect" signature = "0x0A000100" paramIndex="0"/>
 		<command name = "Sound Effect 2" signature = "0x0A010100" paramIndex="0"/>
