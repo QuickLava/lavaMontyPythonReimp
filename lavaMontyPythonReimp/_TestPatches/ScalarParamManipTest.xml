@@ -1,8 +1,8 @@
 <?xml version="1.0"?> 
 <movesetPatch name = "Scalar Param Test">
 	<targets>
-		<command name = "Graphic Effect" signature = "0x11001000" paramIndex="8"/>
-		<command name = "Graphic Effect (Attached)" signature = "0x11010A00" paramIndex="8"/>
+		<command name = "Graphic Effect"				signature = "11001000" paramIndex = "8"/>
+		<command name = "Graphic Effect (Attached)"		signature = "11010A00" paramIndex = "8"/>
 	</targets>
 	<modifications>
 		<mod match = "00000000" evalMethod = "1">

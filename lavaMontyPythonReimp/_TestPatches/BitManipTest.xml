@@ -1,8 +1,8 @@
 <?xml version="1.0"?> 
 <movesetPatch name = "Bit Manip Test">
 	<targets>
-		<command name = "Graphic Effect" signature = "0x11001000" paramIndex="0"/>
-		<command name = "Graphic Effect (Attached)" signature = "0x11010A00" paramIndex="0"/>
+		<command name = "Graphic Effect"				signature = "11001000" paramIndex = "0" paramType = "0"/>
+		<command name = "Graphic Effect (Attached)"		signature = "11010A00" paramIndex = "0" paramType = "0"/>
 	</targets>
 	<modifications>
 		<mod match = "0000XXXX" evalMethod = "1" lock = "11111111">
