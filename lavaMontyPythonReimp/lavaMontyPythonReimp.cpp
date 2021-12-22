@@ -612,11 +612,7 @@ namespace lava
 	{
 		std::size_t numGotten = SIZE_MAX;
 		std::vector<char> currAttr = { 0, 0, 0, 0 };
-		union
-		{
-			std::size_t currAttrNum = SIZE_MAX;
-			float currAttrFlt;
-		}currAttrVal;
+		lava::INT_FLT_BUNDLE currAttrVal;
 		for (std::size_t attributeItr = dataOffset; attributeItr < (dataOffset + lava::canonAttributeSectionLength); attributeItr += lava::canonAttributeLengthInBytes)
 		{
 			currAttr = contents.getBytes(lava::canonAttributeLengthInBytes, attributeItr, numGotten);
