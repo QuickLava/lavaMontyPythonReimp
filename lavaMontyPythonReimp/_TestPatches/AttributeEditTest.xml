@@ -28,7 +28,7 @@
 			<action type = "0xAD" value = "40000000"/>
 			<action type = "0xAC" value = "40000000"/>
 		</mod>
-		<mod match = "XXXXXXXX" evalMethod = "0" extraCondition = "01">
+		<mod match = "XXXXXXXX" evalMethod = "0" extraCondition = "01" lock = "11111111">
 			<action type = "0x02" value = "40800000"/>
 			<action type = "0x02" value = "40800000"/>
 			<action type = "0x02" value = "40800000"/>

@@ -616,15 +616,15 @@ namespace lava
 		for (std::size_t attributeItr = dataOffset; attributeItr < (dataOffset + lava::canonAttributeSectionLength); attributeItr += lava::canonAttributeLengthInBytes)
 		{
 			currAttr = contents.getBytes(lava::canonAttributeLengthInBytes, attributeItr, numGotten);
-			currAttrVal.currAttrNum = lava::hexVecToNum(currAttr);
+			currAttrVal.hex = lava::hexVecToNum(currAttr);
 			output << "Attributes[0x" << lava::numToHexStringWithPadding(attributeItr - dataOffset, 4) << "]: ";
-			if (currAttrVal.currAttrNum > 0x10000000)
+			if (currAttrVal.hex > 0x10000000)
 			{
-				output << currAttrVal.currAttrFlt;
+				output << currAttrVal.flt;
 			}
 			else
 			{
-				output << currAttrVal.currAttrNum;
+				output << currAttrVal.hex;
 			}
 			output << "\n";
 		}
