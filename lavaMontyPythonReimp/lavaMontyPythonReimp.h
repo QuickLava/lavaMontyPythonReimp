@@ -91,6 +91,7 @@ namespace lava
 	
 	bool isHexChar(char charIn);
 	std::string sanitizeHexStrInput(const std::string& stringIn, bool XAllowed = 0);
+	int parseXMLValueAsNum(const std::string& stringIn, bool allowNeg = 0, int defaultVal = INT_MAX);
 	bool hexStrComp(const std::string& str1, const std::string& str2);
 
 	struct movesetPatch;
