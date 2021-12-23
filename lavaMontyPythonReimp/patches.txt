@@ -1,3 +1,4 @@
-"./_TestPatches/IntParamManipTest.xml"
-"./_TestPatches/FloatParamManipTest.xml"
-"./_TestPatches/BitManipTest.xml"
+# Add paths to this file, one per line.
+# Note: Lines prefixed with a hashtag ('#') like this one, the last one, and the next two are considered comments.
+# The following is an example of a validly formatted path:
+#"./_TestPatches/IntParamManipTest.xml"
