@@ -2,3 +2,5 @@
 # Note: Lines prefixed with a hashtag ('#') like this one, the last one, and the next two are considered comments.
 # The following is an example of a validly formatted path:
 #"./_TestPatches/IntParamManipTest.xml"
+"./_PrebuiltPatches/ReversedHitboxAngles.xml"
+"./_PrebuiltPatches/RandomHitboxSounds.xml"

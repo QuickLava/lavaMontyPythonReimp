@@ -1,0 +1,13 @@
+<?xml version="1.0"?> 
+<movesetPatch name = "Random Sword Trace Sizes (Min = 0.5x Max = 3.0x)">
+	<targets>
+		<command name = "Sword Glow" signature = "0x11031400" paramIndex = "19" paramType="1"/>
+		<command name = "Sword/Hammer Glow" signature = "0x11041700" paramIndex = "19" paramType="1"/>
+	</targets>
+	<modifications>
+		<mod match = "00000000" evalMethod = "1">
+			<action type = "0x01" value = "000249F0"/>
+			<action type = "0xA5" value = "00007530"/>
+		</mod>
+	</modifications>
+</movesetPatch>

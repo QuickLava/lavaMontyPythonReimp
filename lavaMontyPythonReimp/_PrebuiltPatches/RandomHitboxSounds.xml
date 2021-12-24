@@ -1,0 +1,14 @@
+<?xml version="1.0"?> 
+<movesetPatch name = "Random Hitbox Sounds">
+	<targets>
+		<command name = "Offensive Collision" signature = "0x06000D00" paramIndex="12"/>
+		<command name = "Special Offensive Collision" signature = "0x06150F00" paramIndex="12"/>
+	</targets>
+	<modifications>
+		<mod match = "XXXXXXXX" lock = "FFFFC1FF">
+			<action type = "0x01" value = "0000000A"/>
+			<action type = "0xA0" value = "00000001"/>
+			<action type = "0xB3" value = "00000009"/>
+		</mod>
+	</modifications>
+</movesetPatch>

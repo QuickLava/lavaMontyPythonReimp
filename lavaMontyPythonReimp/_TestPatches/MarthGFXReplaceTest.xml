@@ -14,7 +14,7 @@
 		<command name = "Sword/Hammer Glow" signature = "0x11041700" paramIndex = "11" paramType="0"/>
 	</targets>
 	<modifications>
-		<mod match = "0012XXXX" evalMethod = "0" lock = "00001111">
+		<mod match = "0012XXXX" evalMethod = "0" lock = "0000FFFF">
 			<action type = "0x00" value = "017A0000"/>
 		</mod>
 	</modifications>

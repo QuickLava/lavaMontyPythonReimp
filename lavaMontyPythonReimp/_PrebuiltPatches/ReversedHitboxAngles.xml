@@ -1,12 +1,12 @@
 <?xml version="1.0"?> 
-<movesetPatch name = "Random Hitbox Angles">
+<movesetPatch name = "Reversed Hitbox Angles">
 	<targets>
 		<command name = "Offensive Collision" signature = "0x06000D00" paramIndex="2"/>
 		<command name = "Special Offensive Collision" signature = "0x06150F00" paramIndex="2"/>
 	</targets>
 	<modifications>
 		<mod match = "XXXXXXXX" evalMethod = "0">
-			<action type = "0x01" value = "FFFFFFFF"/>
+			<action type = "0xA0" value = "000000B4"/>
 			<action type = "0xA4" value = "00000168"/>
 		</mod>
 	</modifications>

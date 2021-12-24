@@ -1,0 +1,12 @@
+<?xml version="1.0"?> 
+<movesetPatch name = "Random Hitbox Elements">
+	<targets>
+		<command name = "Offensive Collision" signature = "0x06000D00" paramIndex="12"/>
+		<command name = "Special Offensive Collision" signature = "0x06150F00" paramIndex="12"/>
+	</targets>
+	<modifications>
+		<mod match = "XXXXXXXX" lock = "FFFFFFE0">
+			<action type = "0x01" value = "00000018"/>
+		</mod>
+	</modifications>
+</movesetPatch>
