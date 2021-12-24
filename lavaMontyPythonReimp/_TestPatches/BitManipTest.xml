@@ -1,11 +1,14 @@
 <?xml version="1.0"?> 
+<!--This patch simply demonstrates that all of the "0xA_" (Arithmetic) Instructions for Scalars work properly.-->
+<!--For information on how these actions work, see the "Actions" page on the Wiki.-->
+<!--Link: https://github.com/QuickLava/lavaMontyPythonReimp/wiki/2c.-Actions-->
 <movesetPatch name = "Bit Manip Test">
 	<targets>
 		<command name = "Graphic Effect" signature = "0x11001000" paramIndex="0"/>
 		<command name = "Graphic Effect (Attached)" signature = "0x11010A00" paramIndex="0"/>
 	</targets>
 	<modifications>
-		<mod match = "0000XXXX" evalMethod = "1" lock = "11111111">
+		<mod match = "0000XXXX" evalMethod = "1" lock = "FFFFFFFF">
 			<action type = "0xB2" value = "FFFFFFFF"/>
 			<action type = "0xB2" value = "FFFFFFFF"/>
 			<action type = "0xB1" value = "0A000000"/>

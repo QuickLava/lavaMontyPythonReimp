@@ -1,4 +1,6 @@
 <?xml version="1.0"?> 
+<!--For further explanation on how exactly this patch works, see the dedicated page on the Wiki!-->
+<!--Link: https://github.com/QuickLava/lavaMontyPythonReimp/wiki/3a.-Practical-Examples:-GFX-File-ID-and-Sword-Trace-ID-Replacement -->
 <movesetPatch name = "Marth Sword Trail ID Replacement (For EX Clone w/ GFX ID 0x43, ef_custom43)">
 	<targets>
 		<command name = "Sword Glow" signature = "11031400" paramIndex = "0" paramType="0"/>

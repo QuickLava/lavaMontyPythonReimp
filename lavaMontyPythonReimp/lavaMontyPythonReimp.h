@@ -11,7 +11,6 @@ namespace lava
 	constexpr std::size_t PACFileHeaderLength = 0x60;
 	constexpr std::size_t movesetHeaderLength = 0x20;
 	constexpr float floatDenominator = 0xEA60;
-	constexpr float attributefloatDenominator = 0x3F800000;
 	constexpr std::size_t canonAttributeSectionLength = 0x2E4;
 	constexpr std::size_t canonAttributeLengthInBytes = 0x4;
 	constexpr std::size_t canonAttributeSectionCount = canonAttributeSectionLength/canonAttributeLengthInBytes;

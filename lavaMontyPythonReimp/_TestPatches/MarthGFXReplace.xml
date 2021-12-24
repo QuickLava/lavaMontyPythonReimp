@@ -1,4 +1,6 @@
 <?xml version="1.0"?> 
+<!--For further explanation on how exactly this patch works, see the dedicated page on the Wiki!-->
+<!--Link: https://github.com/QuickLava/lavaMontyPythonReimp/wiki/3a.-Practical-Examples:-GFX-File-ID-and-Sword-Trace-ID-Replacement -->
 <movesetPatch name = "Marth External GFX File Replacement (For EX Clone w/ GFX ID 0x43, ef_custom43)">
 	<targets>
 		<command name = "Graphic Effect" signature = "0x11001000" paramIndex="0" paramType="0"/>
@@ -14,7 +16,7 @@
 		<command name = "Sword/Hammer Glow" signature = "0x11041700" paramIndex = "11" paramType="0"/>
 	</targets>
 	<modifications>
-		<mod match = "0012XXXX" evalMethod = "0" lock = "00001111">
+		<mod match = "0012XXXX" evalMethod = "0" lock = "0000FFFF">
 			<action type = "0x00" value = "017A0000"/>
 		</mod>
 	</modifications>
