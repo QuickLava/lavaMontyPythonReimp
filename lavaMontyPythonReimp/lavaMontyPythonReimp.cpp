@@ -39,7 +39,7 @@ namespace lava
 		std::string manipStr = stringIn;
 		int base = (manipStr.find("0x") == 0) ? 16 : 10;
 		char* res = nullptr;
-		result = std::strtol(manipStr.c_str(), &res, base);
+		result = std::strtoul(manipStr.c_str(), &res, base);
 		if (res != (manipStr.c_str() + manipStr.size()))
 		{
 			result = defaultVal;
@@ -102,7 +102,7 @@ namespace lava
 								}
 								else if (targetAttr.name() == "signature")
 								{
-									currTarget.signature = lava::numToHexVec(lava::hexStringToNum(lava::sanitizeHexStrInput(targetAttr.as_string(), 0)));
+									currTarget.signature = lava::numToHexVec(lava::parseXMLValueAsNum(targetAttr.as_string(), 1));
 								}
 								else if (targetAttr.name() == "paramIndex")
 								{
@@ -113,13 +113,20 @@ namespace lava
 									currTarget.paramType = lava::parseXMLValueAsNum(targetAttr.as_string(), 0, INT_MAX);
 								}
 							}
-							if (currTarget.paramIndex != INT_MAX)
+							if (currTarget.signature != lava::numToHexVec(INT_MAX))
 							{
-								currPatch.targets.push_back(currTarget);
+								if (currTarget.paramIndex != INT_MAX)
+								{
+									currPatch.targets.push_back(currTarget);
+								}
+								else
+								{
+									std::cerr << "[ERROR] Error in parsing param index for Target \"" << currTarget.name << "\" in moveset patch XML (" << fileIn << ").\n Ensure that this value is a positive integer value.\n";
+								}
 							}
 							else
 							{
-								std::cerr << "[ERROR] Error in parsing param index for Target \"" << currTarget.name << "\" in moveset patch XML (" << fileIn << ").\n Ensure that this value is a positive integer value.\n" ;
+								std::cerr << "[ERROR] Error in parsing signature for Target \"" << currTarget.name << "\" in moveset patch XML (" << fileIn << ").\n Ensure that this is a valid hexadecimal number.\n";
 							}
 							targetNumber++;
 						}
