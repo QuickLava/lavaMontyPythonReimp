@@ -11,7 +11,6 @@ namespace lava
 	constexpr std::size_t PACFileHeaderLength = 0x60;
 	constexpr std::size_t movesetHeaderLength = 0x20;
 	constexpr float floatDenominator = 0xEA60;
-	constexpr float attributefloatDenominator = 0x3F800000;
 	constexpr std::size_t canonAttributeSectionLength = 0x2E4;
 	constexpr std::size_t canonAttributeLengthInBytes = 0x4;
 	constexpr std::size_t canonAttributeSectionCount = canonAttributeSectionLength/canonAttributeLengthInBytes;
@@ -57,11 +56,6 @@ namespace lava
 		actTy_SCLR_MUL,
 		actTy_SCLR_DIV,
 		actTy_SCLR_MOD,
-		actTy_FLT_ADD,
-		actTy_FLT_SUB,
-		actTy_FLT_MUL,
-		actTy_FLT_DIV,
-		actTy_FLT_MOD,
 		// B is for Bit Manipulation
 		actTy_BIT_AND = 0xB0,
 		actTy_BIT_OR,

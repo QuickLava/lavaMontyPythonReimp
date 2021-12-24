@@ -1,4 +1,7 @@
 <?xml version="1.0"?> 
+<!--This patch simply demonstrates that all of the "0xF_" Instructions work properly.-->
+<!--For information on how these actions work, see the "Actions" page on the Wiki.-->
+<!--Link: https://github.com/QuickLava/lavaMontyPythonReimp/wiki/2c.-Actions-->
 <movesetPatch name = "Int Param Test">
 	<targets>
 		<command name = "Graphic Effect" signature = "0x11001000" paramIndex="0" paramType="0"/>

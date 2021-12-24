@@ -1,0 +1,33 @@
+<?xml version="1.0"?> 
+<!--This patch demonstrates the use of the RAND and BIT_SHIFT_L Actions (0x01 and 0xB3, respectively) on a bitflag parameter.-->
+<!--Note: We'll be editing Hitbox flags in this patch, which requires a bit of foreknowledge.-->
+<!---		Check out this page: http://opensa.dantarion.com/wiki/Hitbox_Flags_(Brawl) for details on how this all works.-->
+<movesetPatch name = "Random Hitbox Sounds">
+	<targets>
+		<!--For this, we'll be looking at the Flags parameter of the Offensive Collision events, which is param index 12.-->
+		<command name = "Offensive Collision" signature = "0x06000D00" paramIndex="12"/>
+		<command name = "Special Offensive Collision" signature = "0x06150F00" paramIndex="12"/>
+	</targets>
+	<modifications>
+		<!--We aren't concerned with the value of this parameter, since we're just going to be randomizing part of it.-->
+		<!--So, to make sure this mod always triggers, we'll use "XXXXXXXX" as our "match", and the default evalCondition "0" (==).-->
+		<!--The really important thing here is our "lock" value.-->
+		<!--In this Mod, we're only changing the sound of this hitbox, so we only wanna change bits 19 through 23 (which control hitbox effect)-->
+		<!--So, in our "lock" value (FFFFC1FF), all but those bits are set, which ensures that everything else is left alone (ie. locked). -->
+		<mod match = "XXXXXXXX" lock = "FFFFC1FF">
+			<!--While there are technically 28 (0x1C in hex) hitbox sounds types in the game, a fair few of those are only useable on a specific characters.-->
+			<!--To avoid those, we'll just randomize among sound IDs 1 through 11 (skipping 0 because it's empty).-->
+			<!--To do that, first we'll pick a random number, capped at 10 (so we're really picking from 0 through 9, inclusive).-->
+			<!--For this, we'll use Action "type" 0x01 (RAND) with a "value" of 0xA.-->
+			<action type = "0x01" value = "0000000A"/>
+			<!--Then, we'll add 1 to our result, to take our random range from 0 - 9 to 1 - 10 (our desired ID range).-->
+			<!--We do this with Action "type" 0xA0 (INT_ADD), using a "value" of 1 to add 1.-->
+			<action type = "0xA0" value = "00000001"/>
+			<!--Then, we'll shift the value to the left until our random number is at bit 23, where the hitbox effect is specified.-->
+			<!--Currently it's at the very end of our number, at bit 32. We need to move it to bit 23, so we'll shift left by 32 - 23 = 9 bits.-->
+			<!--We can do that shift with Action "type" 0xB3 (Bitwise Shift Left).-->
+			<action type = "0xB3" value = "00000009"/>
+			<!--And that's it! Apply this patch, and all of a character's hitbox sound effects will be randomized (among sound IDs 1-10)!-->
+		</mod>
+	</modifications>
+</movesetPatch>

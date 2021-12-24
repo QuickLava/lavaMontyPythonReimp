@@ -1,4 +1,6 @@
 <?xml version="1.0"?> 
+<!--For further explanation on how exactly this patch works, see the dedicated page on the Wiki!-->
+<!--Link: https://github.com/QuickLava/lavaMontyPythonReimp/wiki/3b.-Practical-Examples:-SFX-ID-Replacement-using-DirectApply -->
 <movesetPatch name = "Marth SFX ID Replacement (For EX Clone w/ SFX ID 353)">
 	<targets>
 		<command name = "Sound Effect" signature = "0x0A000100" paramIndex="0"/>

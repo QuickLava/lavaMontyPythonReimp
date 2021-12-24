@@ -1463,16 +1463,15 @@ namespace lava
 
 									// Handle lock
 									bool lockUsed = 0;
-									for (std::size_t i = 0; i < 8; i++)
-									{
-										std::string lockApplicationStr = currParamVals.getParamValueString();
-										if (currMod->locked[i] == '1' && lockApplicationStr[i] != canonParamValString[i])
-										{
-											lockApplicationStr[i] = canonParamValString[i];
-											lockUsed = 1;
-										}
-										currParamVals.updateParamValue(lockApplicationStr);
-									}
+									std::size_t lockHexNum = lava::hexStringToNum(currMod->locked);
+									std::size_t lockBufferForCanonVal = lava::hexStringToNum(canonParamValString);
+									lockBufferForCanonVal &= lockHexNum;
+									std::size_t lockBufferForCurrVal = currParamVals.getParamValueNum();
+									lockBufferForCurrVal &= ~(lockHexNum);
+									lockBufferForCurrVal |= lockBufferForCanonVal;
+									currParamVals.updateParamValue(lockBufferForCurrVal);
+									lockUsed = lockBufferForCurrVal != lava::hexStringToNum(canonParamValString);
+									
 									// Only print the result of the lock operation if the value changed as a result of applying it.
 									if (lockUsed)
 									{

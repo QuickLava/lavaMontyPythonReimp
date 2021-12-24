@@ -1,4 +1,6 @@
 <?xml version="1.0"?> 
+<!--This patch simply finds every instance of a variable manipulation within a given moveset file.-->
+<!--Importantly, it demonstrates that patches can also be used for finding information; they don't have to change things.-->
 <movesetPatch name = "Find Variable Manips">
 	<targets>
 		<command name = "Basic Variable Set" 			signature = "0x12000200" paramIndex="1" paramType = "5"/>
@@ -21,6 +23,8 @@
 		<command name = "Bit Variable Clear"			signature = "0x120B0200" paramIndex="1" paramType = "5"/>
 		<command name = "If (1 Var)"					signature = "0x000A0200" paramIndex="1" paramType = "5"/>
 	</targets>
+	<!--Also of note here: all of the Mod entries in this file use the optional "name" value for logging purposes.-->
+	<!--This makes reading the logs produced after running it a lot easier, and is a good idea for purely informational patches like this one.-->
 	<modifications>
 		<mod name = "IC-Basic"	match = "00XXXXXX">
 		</mod>
