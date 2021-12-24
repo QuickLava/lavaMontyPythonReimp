@@ -1,0 +1,71 @@
+	<?xml version="1.0"?> 
+<!--This patch demonstrates how one might make a suite of Attribute changes in one patch.-->
+<!--For information on the Attribute editing process, see the "Attribute Editing" page on the Wiki.-->
+<!--Link: https://github.com/QuickLava/lavaMontyPythonReimp/wiki/4.-Attribute-Editing -->
+
+<movesetPatch name = "Attribute Fox-ify Pt. 0">
+	<targets>
+		<command name = "[ATTR] Jump Startup Time" signature = "0xDEADBEEF" paramIndex="12" paramType="0xFF00"/>
+	</targets>
+	<modifications>
+		<!--Set Jump Squat to 3-->
+		<mod match = "XXXXXXXX" evalMethod = "0">
+			<action type = "0x00" value = "00000003"/>
+		</mod>
+	</modifications>
+</movesetPatch>
+
+<movesetPatch name = "Attribute Fox-ify Pt. 1">
+	<targets>
+		<command name = "[ATTR] Gravity" signature = "0xDEADBEEF" paramIndex="25" paramType="0xFF01"/>
+	</targets>
+	<modifications>
+		<!--Multiply these by 1.7-->
+		<mod match = "XXXXXXXX" evalMethod = "0">
+			<action type = "0xAC" value = "3FD9999A"/>
+		</mod>
+	</modifications>
+</movesetPatch>
+
+<movesetPatch name = "Attribute Fox-ify Pt. 2">
+	<targets>
+		<command name = "[ATTR] Jump V Initial Velocity" signature = "0xDEADBEEF" paramIndex="14" paramType="0xFF01"/>
+		<command name = "[ATTR] Hop V Initial Velocity" signature = "0xDEADBEEF" paramIndex="17" paramType="0xFF01"/>
+		<command name = "[ATTR] Edge Jump V Velocity" signature = "0xDEADBEEF" paramIndex="63" paramType="0xFF01"/>
+		<command name = "[ATTR] Walljump V Velocity" signature = "0xDEADBEEF" paramIndex="90" paramType="0xFF01"/>
+	</targets>
+	<modifications>
+		<!--Multiply these by 1.4-->
+		<mod match = "XXXXXXXX" evalMethod = "0">
+			<action type = "0xAC" value = "3FB33333"/>
+		</mod>
+	</modifications>
+</movesetPatch>
+
+<movesetPatch name = "Attribute Fox-ify Pt. 3">
+	<targets>
+		<command name = "[ATTR] Dash & Run Initial Velocity" signature = "0xDEADBEEF" paramIndex="4" paramType="0xFF01"/>
+		<command name = "[ATTR] Run Maximum Velocity" signature = "0xDEADBEEF" paramIndex="7" paramType="0xFF01"/>
+		<command name = "[ATTR] Maximum H Air Velocity" signature = "0xDEADBEEF" paramIndex="31" paramType="0xFF01"/>
+	</targets>
+	<modifications>
+		<!--Multiply these by 1.25-->
+		<mod match = "XXXXXXXX" evalMethod = "0">
+			<action type = "0xAC" value = "3FA00000"/>
+		</mod>
+	</modifications>
+</movesetPatch>
+
+<movesetPatch name = "Attribute Fox-ify Pt. 4">
+	<targets>
+		<command name = "[ATTR] Terminal Velocity" signature = "0xDEADBEEF" paramIndex="26" paramType="0xFF01"/>
+		<command name = "[ATTR] Fastfall Terminal Velocity" signature = "0xDEADBEEF" paramIndex="33" paramType="0xFF01"/>
+		<command name = "[ATTR] Ground to Air Jump Momentum Multiplier" signature = "0xDEADBEEF" paramIndex="15" paramType="0xFF01"/>
+	</targets>
+	<modifications>
+		<!--Multiply these by 1.1-->
+		<mod match = "XXXXXXXX" evalMethod = "0">
+			<action type = "0xAC" value = "3F8CCCCD"/>
+		</mod>
+	</modifications>
+</movesetPatch>
