@@ -1,13 +1,25 @@
 <?xml version="1.0"?> 
+<!--This patch is a simple demonstration of how to use Action "type" 0x01 (RAND) and 0xA4 (INT_MOD) to generate random numbers within a given range.-->
 <movesetPatch name = "Random Hitbox Angles">
 	<targets>
+		<!--We're gonna demonstrate this by generating randomized hitbox angles!-->
+		<!--For this, we're of course going to target the Offensive Collision events, specifically index 2 (the angle parameter).-->
 		<command name = "Offensive Collision" signature = "0x06000D00" paramIndex="2"/>
 		<command name = "Special Offensive Collision" signature = "0x06150F00" paramIndex="2"/>
 	</targets>
 	<modifications>
+		<!--We don't really care what the current angle is, since we're gonna overwrite it anyway.-->
+		<!--In order to ensure this mod always triggers, we can make our "match" value passthrough characters ('X's), and use "evalMethod" 0 (==).-->
 		<mod match = "XXXXXXXX" evalMethod = "0">
+			<!--We can then use Action "type" 01 (RAND) to generate a random number.-->
 			<action type = "0x01" value = "FFFFFFFF"/>
+			<!--We'll then take the Modulo our random number and the "value": 168 (360 in decimal).-->
+			<!--The MOD operation just gets what the remainder would be if you divided one number by another (here, the remainer of RandomNum / 168).-->
+			<!--This essentially caps the random number at 1 minus the "value" we provide, which was 0x168 (again, 360 in decimal).-->
+			<!--That means we're generating a random number between 0 and 359, which of course is a random angle.-->
 			<action type = "0xA4" value = "00000168"/>
+			<!--Note: Here, I'm only used FFFFFFFF as the "value" (maximum number) of the randomization purely for demonstration purposes.-->
+			<!--You can absolutely just use 168 as the "value" there and reduce this to just 1 Action; I just wanted to demonstrate what 0xA4 does.-->
 		</mod>
 	</modifications>
 </movesetPatch>

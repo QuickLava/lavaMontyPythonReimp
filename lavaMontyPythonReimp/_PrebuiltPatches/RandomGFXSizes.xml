@@ -1,13 +1,23 @@
 <?xml version="1.0"?> 
+<!--This patch is a simple demonstration of how to use Action "type" 0x01 (RAND) and 0xA5 (SCLR_ADD) to generate random Scalars within a given range.-->
 <movesetPatch name = "Random GFX Sizes (Min = 0.5x Max = 3.0x)">
 	<targets>
+	<!--For this, we'll be editing the sizes of Graphic Effects, so we'll target index 8 of the relevant subaction events.-->
+	<!--Note that, while I've only specified two of the GFX events as targets here, you could easily add the other 6 if you wanted!-->
+	<!--Just be sure to target the correct param indeces!-->
 		<command name = "Graphic Effect" signature = "0x11001000" paramIndex="8" paramType="1"/>
 		<command name = "Graphic Effect (Attached)" signature = "0x11010A00" paramIndex="8" paramType="1"/>
 	</targets>
 	<modifications>
+		<!--First, we'll make sure the size value for a parameter isn't 0. We don't really *have* to do this, but I figure if size is 0, it's for a reason.-->
 		<mod match = "00000000" evalMethod = "1">
+			<!--If the size isn't 0, we'll first set our value to a random Scalar between 0.0 and 2.5.-->
+			<!--We do that with Action "type" 0x01 (RAND), and we'll specify our Action "value" as 249F0 (2.5 in Scalar encoding).-->
 			<action type = "0x01" value = "000249F0"/>
+			<!--We'll then add 0.5 to the random value, which effectively raises our minimum value from 0.0 to 0.5, and our maximum from 2.5 to 3.0.-->
+			<!--For that, we use Action "type" 0xA5 (SCLR_ADD) with "value" 7530, which is of course 0.5 in Scalar encoding.-->
 			<action type = "0xA5" value = "00007530"/>
+			<!--And that's it! We're all done!-->
 		</mod>
 	</modifications>
 </movesetPatch>

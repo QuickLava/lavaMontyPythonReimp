@@ -1,12 +1,24 @@
 <?xml version="1.0"?> 
+<!--This patch is a simple demonstration of how the 0xA4 (INT_MOD) Action can be used to cause a param's value to "roll over" when it passes a certain value.-->
 <movesetPatch name = "Reversed Hitbox Angles">
 	<targets>
+		<!--We're gonna demonstrate this by reversing hitbox angles!-->
+		<!--For that, we need to target the Offensive Collision events, specifically index 2 (the angle parameter).-->
 		<command name = "Offensive Collision" signature = "0x06000D00" paramIndex="2"/>
 		<command name = "Special Offensive Collision" signature = "0x06150F00" paramIndex="2"/>
 	</targets>
 	<modifications>
+		<!--We don't really care what the current angle is, since we're gonna overwrite it anyway.-->
+		<!--In order to ensure this mod always triggers, we can make our "match" value passthrough characters ('X's), and use "evalMethod" 0 (==).-->
 		<mod match = "XXXXXXXX" evalMethod = "0">
+			<!--From there, since we know that angles are really just numbers from 0 to 359, all we really need to do to reverse them is add 180 to their value.-->
+			<!--We can do this using the (INT_ADD) Action "type", with a "value" of 0xB4, which is 180 in hex.-->
 			<action type = "0xA0" value = "000000B4"/>
+			<!--Doing that by itself, however, would cause a problem, since Brawl expects angles within that 0 to 360 (0x168 in hex) range.-->
+			<!--To avoid that problem, we can use the Modulo operation.-->
+			<!--The MOD operation gets what the remainder would be if you divided one number by another (here, the remainer of a division by 0x168).-->
+			<!--This causes any value above 360 to essentially "roll over", ensuring our number stays between 0 and 359.-->
+			<!--We use this operation here by using the Action "type" 0xA4 (INT_MOD), using a "value" of 0x168 (again, 360 in decimal).-->
 			<action type = "0xA4" value = "00000168"/>
 		</mod>
 	</modifications>

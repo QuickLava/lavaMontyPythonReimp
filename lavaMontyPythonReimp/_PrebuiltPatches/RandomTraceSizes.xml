@@ -1,4 +1,6 @@
 <?xml version="1.0"?> 
+<!--This is practically identical to the "RandomGFXSizes" patch included in this download.-->
+<!--For specific details on how this patch works, look there!-->
 <movesetPatch name = "Random Sword Trace Sizes (Min = 0.5x Max = 3.0x)">
 	<targets>
 		<command name = "Sword Glow" signature = "0x11031400" paramIndex = "19" paramType="1"/>

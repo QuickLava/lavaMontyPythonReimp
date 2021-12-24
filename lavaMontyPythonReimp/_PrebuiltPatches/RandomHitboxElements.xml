@@ -1,12 +1,23 @@
-<?xml version="1.0"?> 
+<?xml version="1.0"?>
+<!--This patch demonstrates the use of the RAND Action (0x01) on a bitflag parameter.-->
+<!--Note: We'll be editing Hitbox flags in this patch, which requires a bit of foreknowledge.-->
+<!---		Check out this page: http://opensa.dantarion.com/wiki/Hitbox_Flags_(Brawl) for details on how this all works.-->
 <movesetPatch name = "Random Hitbox Elements">
 	<targets>
+		<!--For this, we'll be looking at the Flags parameter of the Offensive Collision events, which is param index 12.-->
 		<command name = "Offensive Collision" signature = "0x06000D00" paramIndex="12"/>
 		<command name = "Special Offensive Collision" signature = "0x06150F00" paramIndex="12"/>
 	</targets>
 	<modifications>
+		<!--We aren't concerned with the value of this parameter, since we're just going to be randomizing part of it.-->
+		<!--So, to make sure this mod always triggers, we'll use "XXXXXXXX" as our "match", and the default evalCondition "0" (==).-->
+		<!--Also note the "lock" value. In this Mod, we're only changing the sound of this hitbox, so we only wanna change the last 5 bits of the Flag param.-->
+		<!--So, in our "lock" value (0xFFFFFFE0), all but the last 5 bits are set, which ensures that all but those bits are left alone (ie. locked). -->
 		<mod match = "XXXXXXXX" lock = "FFFFFFE0">
+			<!--Because we want a random effect, and there are 24 effects (0x18 in hex), we'll use Action "type" 0x01 (RAND) with a "value" of 0x18.-->
 			<action type = "0x01" value = "00000018"/>
+			<!--Note that while, technically, this replaces the whole param value, all but the last 5 bits will be set back to normal thanks to our "lock" value.-->
 		</mod>
+		<!--And that's it, we're done! Applying this patch will randomize the element of all of a character's hitboxes.-->
 	</modifications>
 </movesetPatch>

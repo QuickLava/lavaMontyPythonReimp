@@ -1,0 +1,47 @@
+<?xml version="1.0"?> 
+<!--This patch serves as a demonstration of what can be accomplished by chaining things together.-->
+<!--Note: We'll be editing Hitbox flags in this patch, which requires a bit of foreknowledge.-->
+<!---		Check out this page: http://opensa.dantarion.com/wiki/Hitbox_Flags_(Brawl) for details on how this all works.-->
+<movesetPatch name = "Marth Coin Tippers">
+	<targets>
+		<!--For this, we're targeting the hitbox functions, and we're gonna look at index 0 (the Bone/ID param) to start.-->
+		<command name = "Offensive Collision" signature = "0x06000D00" paramIndex="0"/>
+		<command name = "Special Offensive Collision" signature = "0x06150F00" paramIndex="0"/>
+	</targets>
+	<modifications>
+		<!--First, we'll check if this hitbox is attached to Bone 41 (Marth's Sword Bone)-->
+		<mod match = "0041XXXX" evalMethod = "0">
+		</mod>
+		<!--We'll additionally use a redirect to check if the hitbox's Z-Offset parameter (at index 8, says how far along the sword it sits) is above 5.0-->
+		<!--Note that by using the extraCondition "1", we specify that the previous check must also have passed for this one to.-->
+		<mod match = "000493E0" extraCondition = "1" evalMethod = "3" paramIndexRedirect = "8">
+		</mod>
+		<!--So, if the above two conditions passed (we're looking at a Sword hitbox that's towards the end of the sword, ie. a tipper), we can apply our changes.-->
+		<!--For this, we're redirecting now to the Hitbox Flags param (index 12), which is what we'll change to apply the coin effects.-->
+		<!--Note, again, the extraCondition "1", which says that the previous check must have passed for the following Actions to be applied.-->
+		<!--Also note the "lock" value. In this Mod, we're only changing the sound of this hitbox, so we only wanna change the last 5 bits of the Flag param.-->
+		<!--So, in our "lock" value (0xFFFFFFE0), all but the last 5 bits are set, which ensures that all but those bits are left alone (ie. locked). -->
+		<mod match = "XXXXXXXX" extraCondition = "1" lock = "FFFFFFE0" paramIndexRedirect = "12">
+			<!--We want to use sound ID 06 (the coin sound), which we set using the following Action.-->
+			<!--Note that while, technically, this replaces the whole param value, all but the last 5 bits will be set back to normal thanks to our "lock" value.-->
+			<action type = "0x00" value = "00000006"/>
+		</mod>
+		<!--Here, we're doing much the same thing as we did above.-->
+		<!--The only difference is we're changing our lock so that all but bits 19 through 23 (which control hitbox effect) are unaffected by our edits.-->
+		<mod match = "XXXXXXXX" extraCondition = "1" lock = "FFFFC1FF" paramIndexRedirect = "12">
+			<!--Here, we want to use hitbox effect ID 04, which is the coin effect, so we'll set the parameter to 00000004.-->
+			<action type = "0x00" value = "00000004"/>
+			<!--Now, we'll shift the value to the left until our 04 is at bit 23, where the hitbox effect is specified.-->
+			<!--Currently, the 04 is at the very end of our number, at bit 32. We need to move it to bit 23, so we'll shift left by 32 - 23 = 9 bits.-->
+			<!--We can do that shift with Action "type" 0xB3 (Bitwise Shift Left).-->
+			<action type = "0xB3" value = "00000009"/>
+		</mod>
+		<!--With the above, we're actually all done giving Marth's tippers coin effects.-->
+		<!--However, to make it easier to see affected hitboxes in PSAC, we'll add 1 extra point of shield damage to all affected hitboxes.-->
+		<!--You can remove this part if you don't want to change gameplay at all, it's purely optional.-->
+		<!--Oh, and note again how we're using the "lock" value to ensure that we only effect the Shield Damage part of this parameter, leaving the rest as is.-->
+		<mod match = "XXXXXXXX" extraCondition = "1" paramIndexRedirect = "4" lock = "0000FFFF">
+			<action type = "0xA0" value = "00010000"/>
+		</mod>
+	</modifications>
+</movesetPatch>
