@@ -11,8 +11,8 @@
 		<mod match = "0000XXXX" evalMethod = "1" lock = "FFFFFFFF">
 			<action type = "0xB2" value = "FFFFFFFF"/>
 			<action type = "0xB2" value = "FFFFFFFF"/>
-			<action type = "0xB1" value = "0A000000"/>
-			<action type = "0xB0" value = "F5FFFFFF"/>
+			<action type = "0xB1" value = "80000000"/>
+			<action type = "0xB0" value = "7FFFFFFF"/>
 			<action type = "0xB0" value = "FFFFFFFF"/>
 			<action type = "0xB5" value = "00000004"/>
 			<action type = "0xB6" value = "00000004"/>
