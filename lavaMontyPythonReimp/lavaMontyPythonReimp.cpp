@@ -649,11 +649,6 @@ namespace lava
 
 							printType actionPrintType = printType::integerPrint;
 							printType finalPrintType = printType::integerPrint;
-
-							/*bool doScalarActionPrint = 0;
-							bool doScalarFinalPrint = 0;
-							bool doFloatActionPrint = 0;
-							bool doFloatFinalPrint = 0;*/
 							
 							const movesetPatchMod* currMod = nullptr;
 
