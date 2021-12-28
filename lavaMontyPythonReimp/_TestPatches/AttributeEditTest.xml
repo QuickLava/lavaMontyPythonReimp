@@ -12,7 +12,6 @@
 			<action type = "0xA1" value = "00000004"/>
 			<action type = "0xA2" value = "00000004"/>
 			<action type = "0xA3" value = "00000004"/>
-			<action type = "0xA2" value = "00000002"/>
 		</mod>
 	</modifications>
 </movesetPatch>
@@ -30,7 +29,6 @@
 			<action type = "0xAB" value = "40000000"/>
 			<action type = "0xAC" value = "40000000"/>
 			<action type = "0xAD" value = "40000000"/>
-			<action type = "0xAC" value = "40000000"/>
 		</mod>
 		<mod match = "XXXXXXXX" evalMethod = "0" extraCondition = "01" lock = "FFFFFFFF">
 			<action type = "0x02" value = "40800000"/>
