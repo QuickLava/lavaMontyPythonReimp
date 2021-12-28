@@ -70,7 +70,7 @@ namespace lava
 		actTy_BIT_ROTATE_L,
 		actTy_BIT_ROTATE_R,
 		// F is for CAUTION (lol)
-		// You should't often have need for any of these, but they're here.
+		// You shouldn't often have need for any of these, but they're here.
 		actTy_RETARGET_PARAM = 0xF0,
 		actTy_CONVERT_PARAM,
 		actTy_SWAP_PARAMS,
@@ -84,7 +84,6 @@ namespace lava
 		mtEvl_LESSER,
 		mtEvl_LESSER_OE,
 		mtEvl_BIT_AND,
-		mtEvl_BIT_XOR,
 		evaluationMethodCount
 	};
 	enum extraConditionTypes
@@ -103,6 +102,8 @@ namespace lava
 	std::string sanitizeHexStrInput(const std::string& stringIn, bool XAllowed = 0);
 	int parseXMLValueAsNum(const std::string& stringIn, bool allowNeg = 0, int defaultVal = INT_MAX);
 	bool hexStrComp(const std::string& str1, const std::string& str2);
+	float hexRepToFloat(unsigned int hexIn);
+	unsigned int floatToHexRep(float floatIn);
 
 	struct movesetPatch;
 	std::vector<movesetPatch> parseMovesetPatchXML(std::string fileIn);
